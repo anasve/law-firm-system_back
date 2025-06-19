@@ -1,0 +1,27 @@
+<?php
+
+use App\Http\Controllers\API\Admin\AdminAuthController;
+use App\Http\Controllers\API\Admin\AdminProfileController;
+use App\Http\Controllers\API\Admin\EmployeeController;
+use App\Http\Controllers\API\Admin\LawyerController;
+use Illuminate\Support\Facades\Route;
+
+Route::post('/login', [AdminAuthController::class, 'login']);
+
+Route::middleware('auth:admin')->group(function () {
+
+    Route::post('/logout', [AdminAuthController::class, 'logout']);
+
+    Route::get('/profile', [AdminProfileController::class, 'show']);
+    Route::put('/profile', [AdminProfileController::class, 'update']);
+
+    Route::apiResource('lawyers', LawyerController::class);
+    Route::get('/lawyers-archived', [LawyerController::class, 'archived']);
+    Route::put('/lawyers/{id}/restore', [LawyerController::class, 'restore']);
+    Route::delete('/lawyers/{id}/force', [LawyerController::class, 'forceDelete']);
+
+    Route::apiResource('employees', EmployeeController::class);
+    Route::put('employees/{id}/restore', [EmployeeController::class, 'restore']);
+    Route::delete('employees/{id}/force', [EmployeeController::class, 'forceDelete']);
+    Route::get('employees-archived', [EmployeeController::class, 'archived']);
+});
