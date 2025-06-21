@@ -19,3 +19,5 @@ Route::get('/', function () {
 Route::get('/app', function () {
     return response()->file(public_path('react/index.html'));
 });
+
+

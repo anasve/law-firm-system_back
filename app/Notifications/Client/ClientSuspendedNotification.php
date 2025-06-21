@@ -1,22 +1,22 @@
 <?php
-
-namespace App\Notifications;
+namespace App\Notifications\Client;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ClientApprovedNotification extends Notification
+class ClientSuspendedNotification extends Notification
 {
     use Queueable;
+    protected $client;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct()
+    public function __construct($client)
     {
-        //
+        $this->client = $client;
+
     }
 
     /**
@@ -35,9 +35,11 @@ class ClientApprovedNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-                      ->subject('Account Approved')
-            ->line('Your account has been approved and activated.')
-            ->line('You can now log in and use the system.');
+            ->subject('Account Suspended')
+            ->greeting('Hello ' . $notifiable->name . ',')
+            ->line('We regret to inform you that your account has been suspended.')
+            ->line('If you believe this is a mistake, please contact our support team.')
+            ->line('Thank you.');
     }
 
     /**
@@ -48,7 +50,10 @@ class ClientApprovedNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            //
+            'title'       => 'Account Suspended',
+            'message'     => 'Your account has been suspended. Please contact support if you think this is an error.',
+            'client_id'   => $this->client->id ?? null,
+            'client_name' => $this->client->name ?? null,
         ];
     }
 }

@@ -1,8 +1,8 @@
 <?php
-
 namespace App\Http\Controllers\API\Client;
 
 use App\Models\Client;
+use App\Models\Employee;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
@@ -10,10 +10,11 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Validation\ValidationException;
 use App\Http\Requests\Client\ClientLoginRequest;
 use App\Http\Requests\Client\ClientRegisterRequest;
+use App\Notifications\Employee\NewClientRegistrationNotification;
 
 class ClientAuthController extends Controller
 {
-     public function register(ClientRegisterRequest $request)
+    public function register(ClientRegisterRequest $request)
     {
         $data = $request->validated();
 
@@ -26,9 +27,15 @@ class ClientAuthController extends Controller
 
         event(new Registered($client)); // Laravel will send email verification
 
+        $employees = Employee::all();
+        foreach ($employees as $employee) {
+            $employee->notify(new NewClientRegistrationNotification($client));
+        }
+
         return response()->json([
-            'message' => 'Registered successfully. Check your email for verification.'
+            'message' => 'Registered successfully. Check your email for verification.',
         ], 201);
+
     }
 
     public function login(ClientLoginRequest $request)
@@ -37,7 +44,7 @@ class ClientAuthController extends Controller
 
         if (! $client || ! Hash::check($request->password, $client->password)) {
             throw ValidationException::withMessages([
-                'email' => ['The credentials are incorrect.']
+                'email' => ['The credentials are incorrect.'],
             ]);
         }
 
@@ -47,23 +54,23 @@ class ClientAuthController extends Controller
 
         if ($client->status !== 'active') {
             return response()->json([
-                'message' => match($client->status) {
-                    'pending' => 'Your account is awaiting approval.',
+                'message'   => match ($client->status) {
+                    'pending'   => 'Your account is awaiting approval.',
                     'suspended' => 'Your account is suspended.',
-                    default => 'Your account is inactive.'
-                }
+                    default     => 'Your account is inactive.'
+                },
             ], 403);
         }
 
         $token = $client->createToken('client-token')->plainTextToken;
 
         return response()->json([
-            'token' => $token,
+            'token'  => $token,
             'client' => [
                 'id'    => $client->id,
                 'name'  => $client->name,
                 'email' => $client->email,
-            ]
+            ],
         ]);
     }
 

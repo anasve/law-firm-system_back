@@ -11,6 +11,9 @@ use App\Http\Controllers\API\Client\ClientAuthController;
 // -----------------
 
 // Register (Sign Up)
+
+
+
 Route::post('/register', [ClientAuthController::class, 'register']);
 
 // Login (Sign In)

@@ -1,12 +1,12 @@
 <?php
-
 namespace App\Http\Controllers\API\Employee;
 
-use App\Models\Client;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-use App\Notifications\ClientApprovedNotification;
-use App\Notifications\ClientSuspendedNotification;
+use App\Models\Client;
+use App\Notifications\Client\ClientApprovedNotification;
+use App\Notifications\Client\ClientRejectedNotification;
+use App\Notifications\Client\ClientSuspendedNotification;
+use Illuminate\Http\Request;
 
 class ClientManagementController extends Controller
 {
@@ -21,7 +21,7 @@ class ClientManagementController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%$search%")
-                  ->orWhere('email', 'like', "%$search%");
+                    ->orWhere('email', 'like', "%$search%");
             });
         }
 
@@ -29,24 +29,44 @@ class ClientManagementController extends Controller
         return response()->json($clients);
     }
 
-    // List verified clients who are still pending approval
+    // List email-verified clients who are still pending approval
     public function pendingVerified()
     {
         $clients = Client::whereNotNull('email_verified_at')
-                         ->where('status', 'pending')
-                         ->paginate(10);
+            ->where('status', 'pending')
+            ->paginate(10);
 
         return response()->json($clients);
     }
 
-    // Show specific client profile
+    public function approved()
+    {
+        $clients = Client::where('status', 'active')->paginate(10);
+        return response()->json($clients);
+    }
+
+// List suspended clients
+    public function suspended()
+    {
+        $clients = Client::where('status', 'suspended')->paginate(10);
+        return response()->json($clients);
+    }
+
+    // List rejected clients
+    public function rejected()
+    {
+        $clients = Client::where('status', 'rejected')->paginate(10);
+        return response()->json($clients);
+    }
+
+    // Show client details
     public function show($id)
     {
         $client = Client::findOrFail($id);
         return response()->json($client);
     }
 
-    // Update client data (name, email)
+    // Update client information
     public function update(Request $request, $id)
     {
         $client = Client::findOrFail($id);
@@ -64,55 +84,66 @@ class ClientManagementController extends Controller
         ]);
     }
 
-    // Activate/approve a client account
+    // Approve (activate) client account
     public function activate($id)
     {
         $client = Client::findOrFail($id);
 
         if (! $client->hasVerifiedEmail()) {
-            return response()->json([
-                'message' => 'Client must verify email before approval.'
-            ], 400);
+            return response()->json(['message' => 'Client must verify email before approval.'], 400);
         }
 
         $client->status = 'active';
         $client->save();
 
-        // Send notification
-        $client->notify(new ClientApprovedNotification());
+        $client->notify(new ClientApprovedNotification($client));
 
-        return response()->json([
-            'message' => 'Client approved successfully and notified.'
-        ]);
+        return response()->json(['message' => 'Client approved successfully and notified.']);
     }
 
+    // Reject a client account
+    public function reject($id)
+    {
+        $client = Client::findOrFail($id);
+
+        // Allow rejection only if status is still pending
+        if ($client->status !== 'pending') {
+            return response()->json([
+                'message' => 'Only pending clients can be rejected.',
+            ], 400);
+        }
+
+        $client->status = 'rejected';
+        $client->save();
+
+        $client->notify(new ClientRejectedNotification($client));
+
+        return response()->json([
+            'message' => 'Client rejected successfully and notified.',
+        ]);
+    }
     // Suspend a client account
     public function suspend($id)
     {
-        $client = Client::findOrFail($id);
+        $client         = Client::findOrFail($id);
         $client->status = 'suspended';
         $client->save();
 
-        // Send notification
-        $client->notify(new ClientSuspendedNotification());
+        $client->notify(new ClientSuspendedNotification($client));
 
-        return response()->json([
-            'message' => 'Client suspended successfully and notified.'
-        ]);
+        return response()->json(['message' => 'Client suspended successfully and notified.']);
     }
 
-    // Soft delete (archive) a client
+    // Archive (soft delete) a client
     public function destroy($id)
     {
         $client = Client::findOrFail($id);
         $client->delete();
 
-        return response()->json([
-            'message' => 'Client archived successfully.'
-        ]);
+        return response()->json(['message' => 'Client archived successfully.']);
     }
 
-    // List archived clients
+    // List archived (soft deleted) clients
     public function archived()
     {
         $clients = Client::onlyTrashed()->paginate(10);
