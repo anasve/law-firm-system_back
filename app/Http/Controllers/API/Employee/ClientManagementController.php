@@ -25,7 +25,7 @@ class ClientManagementController extends Controller
             });
         }
 
-        $clients = $query->orderBy('created_at', 'desc')->paginate(10);
+        $clients = $query->orderBy('created_at', 'desc');
         return response()->json($clients);
     }
 
@@ -34,28 +34,28 @@ class ClientManagementController extends Controller
     {
         $clients = Client::whereNotNull('email_verified_at')
             ->where('status', 'pending')
-            ->paginate(10);
+            ;
 
         return response()->json($clients);
     }
 
     public function approved()
     {
-        $clients = Client::where('status', 'active')->paginate(10);
+        $clients = Client::where('status', 'active');
         return response()->json($clients);
     }
 
 // List suspended clients
     public function suspended()
     {
-        $clients = Client::where('status', 'suspended')->paginate(10);
+        $clients = Client::where('status', 'suspended');
         return response()->json($clients);
     }
 
     // List rejected clients
     public function rejected()
     {
-        $clients = Client::where('status', 'rejected')->paginate(10);
+        $clients = Client::where('status', 'rejected');
         return response()->json($clients);
     }
 
@@ -146,7 +146,7 @@ class ClientManagementController extends Controller
     // List archived (soft deleted) clients
     public function archived()
     {
-        $clients = Client::onlyTrashed()->paginate(10);
+        $clients = Client::onlyTrashed();
         return response()->json($clients);
     }
 
