@@ -1,28 +1,29 @@
 <?php
 namespace App\Http\Controllers\API\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
-use App\Http\Requests\Admin\Employee\StoreEmployeeRequest;
-use App\Http\Requests\Admin\Employee\UpdateEmployeeRequest;
 
 class EmployeeController extends Controller
 {
-
     public function index(Request $request)
     {
-        $query = Employee::query();
+        \Log::info('Search param:', ['search' => $request->query('search')]);
 
-        if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%$search%")
-                  ->orWhere('email', 'like', "%$search%");
-            });
+        $employees = Employee::query()
+            ->when($request->query('search'), function ($query, $search) {
+                return $query->where('name', $search);
+            })
+            ->latest()
+            ->get();
+
+        if ($employees->isEmpty()) {
+            return response()->json([
+                'message' => 'No employee found with the exact name.',
+            ], 404);
         }
-
-        $employees = $query->whereNull('deleted_at')->get();
 
         return response()->json($employees);
     }
@@ -47,8 +48,8 @@ class EmployeeController extends Controller
         $employee = Employee::create($data);
 
         return response()->json([
-            'message' => 'Employee created successfully',
-            'employee' => $employee
+            'message'  => 'Employee created successfully',
+            'employee' => $employee,
         ], 201);
     }
 
@@ -56,7 +57,7 @@ class EmployeeController extends Controller
     public function update(UpdateEmployeeRequest $request, $id)
     {
         $employee = Employee::findOrFail($id);
-        $data = $request->validated();
+        $data     = $request->validated();
 
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
@@ -65,8 +66,8 @@ class EmployeeController extends Controller
         $employee->update($data);
 
         return response()->json([
-            'message' => 'Employee updated successfully',
-            'employee' => $employee
+            'message'  => 'Employee updated successfully',
+            'employee' => $employee,
         ]);
     }
 
@@ -103,5 +104,10 @@ class EmployeeController extends Controller
         $employee->forceDelete();
 
         return response()->json(['message' => 'Employee permanently deleted']);
+    }
+
+    public function total()
+    {
+        return response()->json(['total_employees' => Employee::count()]);
     }
 }

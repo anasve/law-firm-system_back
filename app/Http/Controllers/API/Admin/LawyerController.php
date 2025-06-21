@@ -16,12 +16,20 @@ class LawyerController extends Controller
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%$search%")
-                    ->orWhere('email', 'like', "%$search%");
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
-        $lawyers = $query->get()->map(function ($lawyer) {
+        $lawyers = $query->get();
+
+        if ($lawyers->isEmpty()) {
+            return response()->json([
+                'message' => 'No lawyers found matching your search.',
+            ], 404);
+        }
+
+        $lawyers = $lawyers->map(function ($lawyer) {
             return [
                 'id'              => $lawyer->id,
                 'name'            => $lawyer->name,
@@ -77,7 +85,7 @@ class LawyerController extends Controller
 
         return response()->json([
             'message' => 'Lawyer created successfully',
-            'lawyer'  => [  
+            'lawyer'  => [
                 'id'              => $lawyer->id,
                 'name'            => $lawyer->name,
                 'email'           => $lawyer->email,
@@ -178,5 +186,10 @@ class LawyerController extends Controller
         $lawyer->forceDelete();
 
         return response()->json(['message' => 'Lawyer permanently deleted']);
+    }
+
+    public function total()
+    {
+        return response()->json(['total_lawyers' => Lawyer::count()]);
     }
 }

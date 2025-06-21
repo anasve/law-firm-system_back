@@ -24,8 +24,6 @@ class RouteServiceProvider extends ServiceProvider
     public function boot(): void
     {
 
-
-        
         RateLimiter::for('api', function (Request $request) {
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
@@ -47,10 +45,13 @@ class RouteServiceProvider extends ServiceProvider
                 ->middleware('api')
                 ->group(base_path('routes/employee.php'));
 
-                Route::prefix('api/client')
+            Route::prefix('api/client')
                 ->middleware('api')
                 ->group(base_path('routes/client.php'));
 
+            Route::prefix('api/guest')
+                ->middleware('api')
+                ->group(base_path('routes/guest.php'));
 
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));
