@@ -1,12 +1,14 @@
 <?php
+
 namespace App\Http\Controllers\API\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Http\Requests\Admin\Lawyer\StoreLawyerRequest;
-use App\Http\Requests\Admin\Lawyer\UpdateLawyerRequest;
 use App\Models\Lawyer;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use App\Http\Requests\Admin\Lawyer\StoreLawyerRequest;
+use App\Http\Requests\Admin\Lawyer\UpdateLawyerRequest;
 
 class LawyerController extends Controller
 {
@@ -76,8 +78,8 @@ class LawyerController extends Controller
 
         $lawyer = Lawyer::create($data);
 
-        if (isset($data['specializations'])) {
-            $lawyer->specializations()->sync($data['specializations']);
+        if (!empty($data['specialization_ids'])) {
+            $lawyer->specializations()->sync($data['specialization_ids']);
         }
 
         $lawyer->load('specializations');
@@ -116,8 +118,8 @@ class LawyerController extends Controller
 
         $lawyer->update($data);
 
-        if (isset($data['specializations'])) {
-            $lawyer->specializations()->sync($data['specializations']);
+        if (!empty($data['specialization_ids'])) {
+            $lawyer->specializations()->sync($data['specialization_ids']);
         }
 
         $lawyer->load('specializations');
