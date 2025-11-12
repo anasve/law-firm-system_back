@@ -28,7 +28,7 @@ class StoreLawyerRequest extends FormRequest
             'password'           => 'required|string|min:6|confirmed',
             'certificate'        => 'nullable|file',
             'specialization_ids' => 'required|array',
-        ];
+        ];  
     }
 
     public function messages()

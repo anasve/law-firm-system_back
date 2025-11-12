@@ -1,16 +1,19 @@
 <?php
 namespace App\Http\Controllers\API\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Models\Employee;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\Admin\Employee\StoreEmployeeRequest;
+use App\Http\Requests\Admin\Employee\UpdateEmployeeRequest;
 
 class EmployeeController extends Controller
 {
     public function index(Request $request)
     {
-        \Log::info('Search param:', ['search' => $request->query('search')]);
+        Log::info('Search param:', ['search' => $request->query('search')]);
 
         $employees = Employee::query()
             ->when($request->query('search'), function ($query, $search) {
