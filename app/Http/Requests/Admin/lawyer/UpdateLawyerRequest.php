@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Requests\Admin\Lawyer;
 
 use Illuminate\Foundation\Http\FormRequest;
@@ -21,16 +22,18 @@ class UpdateLawyerRequest extends FormRequest
      */
     public function rules(): array
     {
+        $id = $this->route('lawyer');
 
         return [
             'name'                 => 'sometimes|required|string|max:255',
+            'email' => 'sometimes|required|email|unique:lawyers,email,' . $id,
+            // 'email'                => [
+            //     'sometimes',
+            //     'required',
+            //     'email',
+            //     Rule::unique('lawyers', 'email')->ignore($this->lawyer->id),
 
-            'email'                => [
-                'sometimes',
-                'required',
-                'email',
-                Rule::unique('lawyers')->ignore($this->route('laywer')),
-            ],
+            // ],
 
             'password'             => 'sometimes|nullable|string|min:6|confirmed',
 
