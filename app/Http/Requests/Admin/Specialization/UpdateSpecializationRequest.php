@@ -21,10 +21,10 @@ class UpdateSpecializationRequest extends FormRequest
      */
     public function rules(): array
     {
-        $id = $this->route('id'); // get specialization ID from URL
+        $id = $this->route('specialization'); // get specialization ID from URL
 
         return [
-            'name'        => 'required|string|max:100|unique:specializations,name,' . $id,
+            'name'        => 'nullable|string|max:100|unique:specializations,name,' . $id,
             'description' => 'nullable|string|max:500',
         ];
     }
