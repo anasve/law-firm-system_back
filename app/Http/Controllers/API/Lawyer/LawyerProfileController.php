@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\API\lawyer;
+namespace App\Http\Controllers\API\Lawyer;
 
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;

@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\API\Admin\LawController;
+use App\Http\Controllers\Api\Admin\LawController;
 use App\Http\Controllers\API\Admin\LawyerController;
 use App\Http\Controllers\API\Admin\EmployeeController;
 use App\Http\Controllers\API\Admin\AdminAuthController;

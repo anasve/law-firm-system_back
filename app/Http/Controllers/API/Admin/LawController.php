@@ -5,14 +5,12 @@ namespace App\Http\Controllers\API\Admin;
 use App\Models\Law;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\law\StoreLawRequest;
+use App\Http\Requests\Admin\law\UpdateLawRequest;
 
 class LawController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    // ✅ List ALL laws (optional filter by status or search)
-    public function index(Request $request)
+  public function index(Request $request)
     {
         $query = Law::query();
 
@@ -24,7 +22,7 @@ class LawController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('title', 'like', "%{$search}%")
-                    ->orWhere('category', 'like', "%{$search}%");
+                  ->orWhere('category', 'like', "%{$search}%");
             });
         }
 
@@ -38,7 +36,6 @@ class LawController extends Controller
 
         return response()->json($laws);
     }
-
 
     // ✅ List PUBLISHED laws only
     public function published()
@@ -68,40 +65,37 @@ class LawController extends Controller
         return response()->json($law);
     }
 
-    // ✅ Create new law
-    public function store(Request $request)
+    // ✅ Create new law (using StoreLawRequest)
+    public function store(StoreLawRequest $request)
     {
-        $data = $request->validate([
-            'title'        => 'required|string|max:255',
-            'category'     => 'required|string|max:255',
-            'summary'      => 'required|string|max:500',
-            'full_content' => 'required|string',
-            'status'       => 'in:draft,published',
+        $data = $request->validated();
+
+        $law = Law::create([
+            'title'        => $data['title'],
+            'category'     => $data['category'],
+            'summary'      => $data['summary'],
+            'full_content' => $data['full_content'],
+            'status'       => $data['status'] ?? 'draft',
         ]);
 
-        $law = Law::create(array_merge($data, [
-            'status' => $data['status'] ?? 'draft',
-        ]));
-
-        return response()->json(['message' => 'Law created successfully', 'law' => $law]);
+        return response()->json([
+            'message' => 'Law created successfully.',
+            'law'     => $law,
+        ], 201);
     }
 
-    // ✅ Update law
-    public function update(Request $request, $id)
+    // ✅ Update law (using UpdateLawRequest)
+    public function update(UpdateLawRequest $request, $id)
     {
-        $law = Law::findOrFail($id);
-
-        $data = $request->validate([
-            'title'        => 'sometimes|required|string|max:255',
-            'category'     => 'sometimes|required|string|max:255',
-            'summary'      => 'sometimes|required|string|max:500',
-            'full_content' => 'sometimes|required|string',
-            'status'       => 'sometimes|in:draft,published',
-        ]);
+        $law  = Law::findOrFail($id);
+        $data = $request->validated();
 
         $law->update($data);
 
-        return response()->json(['message' => 'Law updated successfully', 'law' => $law]);
+        return response()->json([
+            'message' => 'Law updated successfully.',
+            'law'     => $law,
+        ]);
     }
 
     // ✅ Toggle status between draft and published
@@ -112,8 +106,8 @@ class LawController extends Controller
         $law->save();
 
         return response()->json([
-            'message' => "Law status switched to {$law->status}",
-            'law'     => $law
+            'message' => "Law status switched to {$law->status}.",
+            'law'     => $law,
         ]);
     }
 
@@ -123,7 +117,9 @@ class LawController extends Controller
         $law = Law::findOrFail($id);
         $law->delete();
 
-        return response()->json(['message' => 'Law archived successfully.']);
+        return response()->json([
+            'message' => 'Law archived successfully.',
+        ]);
     }
 
     // ✅ Restore a soft-deleted law
@@ -132,14 +128,19 @@ class LawController extends Controller
         $law = Law::onlyTrashed()->findOrFail($id);
         $law->restore();
 
-        return response()->json(['message' => 'Law restored successfully.']);
+        return response()->json([
+            'message' => 'Law restored successfully.',
+        ]);
     }
 
+    // ✅ Force delete
     public function forceDelete($id)
     {
-        $law = Law::onlyTrashed()->findOrFail($id); // must be soft deleted first
+        $law = Law::onlyTrashed()->findOrFail($id);
         $law->forceDelete();
 
-        return response()->json(['message' => 'Law permanently deleted.']);
+        return response()->json([
+            'message' => 'Law permanently deleted.',
+        ]);
     }
 }
