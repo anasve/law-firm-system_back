@@ -26,7 +26,10 @@ class NewClientRegistrationNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['mail' , ' database'];
+        // Temporarily disable email to avoid Mailtrap rate limit
+        // Only use database notifications for now
+        // To enable email: change to ['mail', 'database'] and use queue with delay
+        return ['database'];
     }
 
     /**

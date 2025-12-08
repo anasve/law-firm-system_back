@@ -44,4 +44,14 @@ class Client extends Authenticatable implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    /**
+     * Get the URL for email verification.
+     *
+     * @return string
+     */
+    public function verificationUrl()
+    {
+        return url('/api/guest/verify-email/' . $this->getKey() . '/' . sha1($this->getEmailForVerification()));
+    }
 }
