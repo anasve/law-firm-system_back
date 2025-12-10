@@ -48,7 +48,7 @@ class ClientManagementController extends Controller
         return response()->json($clients);
     }
 
-    // List suspended clients
+// List suspended clients
     public function suspended()
     {
         $clients = Client::where('status', 'suspended')

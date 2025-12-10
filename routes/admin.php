@@ -7,6 +7,7 @@ use App\Http\Controllers\API\Admin\EmployeeController;
 use App\Http\Controllers\API\Admin\AdminAuthController;
 use App\Http\Controllers\API\Admin\AdminProfileController;
 use App\Http\Controllers\API\Admin\SpecializationController;
+use App\Http\Controllers\API\Admin\AdminConsultationController;
 
 Route::post('/login', [AdminAuthController::class, 'login']);
 
@@ -47,5 +48,10 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('specializations-archived', [SpecializationController::class, 'archived']); 
     Route::put('specializations/{id}/restore', [SpecializationController::class, 'restore']); 
     Route::delete('specializations/{id}/force', [SpecializationController::class, 'forceDelete']);
+
+    // Consultations routes (قراءة فقط - الإدارة للموظف)
+    Route::get('consultations', [AdminConsultationController::class, 'index']);
+    Route::get('consultations/statistics', [AdminConsultationController::class, 'statistics']);
+    Route::get('consultations/{id}', [AdminConsultationController::class, 'show']);
 
 });

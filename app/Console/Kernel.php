@@ -12,7 +12,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // إرسال تذكيرات المواعيد كل 5 دقائق
+        $schedule->command('appointments:send-reminders')->everyFiveMinutes();
     }
 
     /**
