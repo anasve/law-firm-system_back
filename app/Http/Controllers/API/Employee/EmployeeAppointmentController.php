@@ -30,9 +30,43 @@ class EmployeeAppointmentController extends Controller
             $query->whereDate('datetime', $date);
         }
 
+        // فلترة المواعيد بوقت مخصص
+        if ($request->has('custom_time_only') && $request->custom_time_only) {
+            $query->whereNull('availability_id');
+        }
+
         $appointments = $query->orderBy('datetime', 'asc')->get();
 
-        return response()->json($appointments);
+        // إضافة is_custom_time_request لكل موعد
+        $appointmentsData = $appointments->map(function ($appointment) {
+            $data = $appointment->toArray();
+            $data['is_custom_time_request'] = $appointment->is_custom_time_request;
+            return $data;
+        });
+
+        return response()->json($appointmentsData);
+    }
+
+    // عرض المواعيد بوقت مخصص (في انتظار التأكيد)
+    public function customTimeRequests(Request $request)
+    {
+        $query = Appointment::with(['client', 'lawyer', 'consultation'])
+            ->whereNull('availability_id')
+            ->where('status', 'pending');
+
+        if ($lawyerId = $request->input('lawyer_id')) {
+            $query->where('lawyer_id', $lawyerId);
+        }
+
+        $appointments = $query->orderBy('datetime', 'asc')->get();
+
+        $appointmentsData = $appointments->map(function ($appointment) {
+            $data = $appointment->toArray();
+            $data['is_custom_time_request'] = true;
+            return $data;
+        });
+
+        return response()->json($appointmentsData);
     }
 
     // عرض موعد محدد
@@ -41,7 +75,10 @@ class EmployeeAppointmentController extends Controller
         $appointment = Appointment::with(['client', 'lawyer', 'consultation', 'availability'])
             ->findOrFail($id);
 
-        return response()->json($appointment);
+        $appointmentData = $appointment->toArray();
+        $appointmentData['is_custom_time_request'] = $appointment->is_custom_time_request;
+
+        return response()->json($appointmentData);
     }
 
     // تحديث موعد

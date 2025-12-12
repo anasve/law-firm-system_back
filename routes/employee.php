@@ -47,6 +47,7 @@ Route::middleware('auth:employee')->group(function () {
 
     // Appointments management routes
     Route::get('appointments', [EmployeeAppointmentController::class, 'index']);
+    Route::get('appointments/custom-time-requests', [EmployeeAppointmentController::class, 'customTimeRequests']); // المواعيد بوقت مخصص
     Route::get('appointments/calendar/month', [EmployeeAppointmentController::class, 'calendarMonth']); // تقويم شهري
     Route::get('appointments/calendar/week', [EmployeeAppointmentController::class, 'calendarWeek']); // تقويم أسبوعي
     Route::get('appointments/calendar/day', [EmployeeAppointmentController::class, 'calendarDay']); // تقويم يومي

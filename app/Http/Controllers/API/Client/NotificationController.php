@@ -17,8 +17,11 @@ class NotificationController extends Controller
             $query->whereNull('read_at');
         }
 
+        // دعم limit و per_page
+        $perPage = $request->get('limit', $request->get('per_page', 15));
+
         $notifications = $query->orderBy('created_at', 'desc')
-            ->paginate($request->get('per_page', 15));
+            ->paginate($perPage);
 
         return response()->json($notifications);
     }

@@ -69,5 +69,17 @@ class Appointment extends Model
     {
         return $query->where('client_id', $clientId);
     }
+
+    // Accessor للتحقق من أن الموعد هو طلب وقت مخصص
+    public function getIsCustomTimeRequestAttribute()
+    {
+        return $this->availability_id === null;
+    }
+
+    // Scope للمواعيد بوقت مخصص
+    public function scopeCustomTimeRequests($query)
+    {
+        return $query->whereNull('availability_id');
+    }
 }
 

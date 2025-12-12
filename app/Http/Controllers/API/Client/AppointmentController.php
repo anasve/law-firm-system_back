@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 
 class AppointmentController extends Controller
 {
-    // عرض المواعيد المتاحة لمحامي معين
+    // عرض جميع الأوقات (فارغة ومحجوزة) لمحامي معين
     public function getAvailableSlots(Request $request, $lawyerId)
     {
         $request->validate([
@@ -21,111 +21,256 @@ class AppointmentController extends Controller
         ]);
 
         $date = $request->input('date');
+        $dateCarbon = \Carbon\Carbon::parse($date);
 
         // التحقق من أن التاريخ ليس في الماضي
-        if (\Carbon\Carbon::parse($date)->isPast() && !\Carbon\Carbon::parse($date)->isToday()) {
+        if ($dateCarbon->isPast() && !$dateCarbon->isToday()) {
             return response()->json([
                 'message' => 'لا يمكن حجز موعد في الماضي',
             ], 400);
         }
 
-        $availableSlots = LawyerAvailability::where('lawyer_id', $lawyerId)
+        // جلب جميع الأوقات لهذا التاريخ (ما عدا المعطلة)
+        $allSlots = LawyerAvailability::where('lawyer_id', $lawyerId)
             ->where('date', $date)
-            ->where('status', 'available')
             ->where('is_vacation', false)
-            ->whereNotIn('id', function ($query) use ($date) {
-                $query->select('availability_id')
-                    ->from('appointments')
-                    ->where('status', '!=', 'cancelled')
-                    ->whereDate('datetime', $date)
-                    ->whereNotNull('availability_id');
-            })
+            ->where('status', '!=', 'unavailable')
             ->orderBy('start_time', 'asc')
             ->get();
+
+        // جلب المواعيد المحجوزة في هذا التاريخ
+        $bookedAppointments = Appointment::where('lawyer_id', $lawyerId)
+            ->whereDate('datetime', $date)
+            ->where('status', '!=', 'cancelled')
+            ->whereNotNull('availability_id')
+            ->get()
+            ->keyBy('availability_id');
+
+        // تصنيف الأوقات
+        $slots = $allSlots->map(function ($slot) use ($bookedAppointments, $dateCarbon) {
+            $slotTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $slot->date->format('Y-m-d') . ' ' . (strlen($slot->start_time) == 5 ? $slot->start_time . ':00' : $slot->start_time));
+            
+            // تحديد حالة الوقت
+            $status = 'available'; // افتراضي
+            $appointmentId = null;
+            
+            // إذا كان في الماضي
+            if ($slotTime->isPast() && !$slotTime->isToday()) {
+                $status = 'past';
+            }
+            // إذا كان محجوز
+            elseif ($slot->status === 'booked' || $bookedAppointments->has($slot->id)) {
+                $status = 'booked';
+                if ($bookedAppointments->has($slot->id)) {
+                    $appointmentId = $bookedAppointments->get($slot->id)->id;
+                }
+            }
+            // إذا كان معطل
+            elseif ($slot->is_vacation || $slot->status === 'unavailable') {
+                $status = 'unavailable';
+            }
+
+            return [
+                'id' => $slot->id,
+                'start_time' => $slot->start_time,
+                'end_time' => $slot->end_time,
+                'duration' => $this->calculateDuration($slot->start_time, $slot->end_time),
+                'status' => $status, // available, booked, unavailable, past
+                'appointment_id' => $appointmentId,
+            ];
+        });
+
+        // فصل الأوقات حسب الحالة
+        $availableSlots = $slots->where('status', 'available')->values();
+        $bookedSlots = $slots->where('status', 'booked')->values();
+        $unavailableSlots = $slots->where('status', 'unavailable')->values();
+        $pastSlots = $slots->where('status', 'past')->values();
 
         return response()->json([
             'date' => $date,
             'lawyer_id' => $lawyerId,
-            'available_slots' => $availableSlots->map(function ($slot) {
-                return [
-                    'id' => $slot->id,
-                    'start_time' => $slot->start_time,
-                    'end_time' => $slot->end_time,
-                    'duration' => $this->calculateDuration($slot->start_time, $slot->end_time),
-                ];
-            }),
+            'slots' => [
+                'available' => $availableSlots,
+                'booked' => $bookedSlots,
+                'unavailable' => $unavailableSlots,
+                'past' => $pastSlots,
+            ],
+            'summary' => [
+                'total' => $slots->count(),
+                'available_count' => $availableSlots->count(),
+                'booked_count' => $bookedSlots->count(),
+                'unavailable_count' => $unavailableSlots->count(),
+                'past_count' => $pastSlots->count(),
+            ],
         ]);
     }
 
-    // حجز موعد مباشر بدون استشارة
+    // حجز موعد مباشر بدون استشارة (يدعم Regular Booking و Custom Time Request)
     public function bookDirectAppointment(Request $request)
     {
+        // Validation rules - إما availability_id أو datetime
         $request->validate([
             'lawyer_id' => 'required|exists:lawyers,id',
-            'availability_id' => 'required|exists:lawyer_availability,id',
-            'subject' => 'required|string|max:255',
+            'availability_id' => 'required_without:datetime|nullable|integer|exists:lawyer_availability,id',
+            'datetime' => 'required_without:availability_id|nullable|date|after:now',
+            'preferred_time' => 'required_with:datetime|nullable|date_format:H:i',
+            'preferred_date' => 'required_with:datetime|nullable|date|after_or_equal:' . now()->format('Y-m-d'),
+            'subject' => 'required|string|min:1|max:255',
             'description' => 'required|string|min:10',
             'type' => 'required|in:online,in_office,phone',
             'meeting_link' => 'nullable|url|required_if:type,online',
             'notes' => 'nullable|string|max:1000',
+        ], [
+            'availability_id.required_without' => 'يجب إرسال إما availability_id أو datetime',
+            'datetime.required_without' => 'يجب إرسال إما availability_id أو datetime',
+            'preferred_time.required_with' => 'preferred_time مطلوب عند إرسال datetime',
+            'preferred_date.required_with' => 'preferred_date مطلوب عند إرسال datetime',
+            'meeting_link.required_if' => 'رابط الاجتماع مطلوب للاجتماعات الافتراضية',
         ]);
+
+        // التحقق من عدم إرسال كليهما
+        if ($request->has('availability_id') && $request->has('datetime')) {
+            return response()->json([
+                'message' => 'يجب إرسال إما availability_id أو datetime، وليس كلاهما',
+                'errors' => [
+                    'availability_id' => ['يجب إرسال إما availability_id أو datetime'],
+                    'datetime' => ['يجب إرسال إما availability_id أو datetime'],
+                ],
+            ], 422);
+        }
 
         $lawyer = \App\Models\Lawyer::findOrFail($request->lawyer_id);
-        
-        $availability = LawyerAvailability::where('id', $request->availability_id)
-            ->where('lawyer_id', $request->lawyer_id)
-            ->where('status', 'available')
-            ->where('is_vacation', false)
-            ->firstOrFail();
+        $isCustomTimeRequest = $request->has('datetime');
 
-        // التحقق من أن الموعد ليس في الماضي
-        $date = $availability->date;
-        $time = strlen($availability->start_time) == 5 ? $availability->start_time . ':00' : $availability->start_time;
-        $datetime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $time);
-        
-        if ($datetime->isPast()) {
+        if ($isCustomTimeRequest) {
+            // Custom Time Request Flow
+            // دعم صيغتين: Y-m-d\TH:i:s أو Y-m-d H:i:s أو Y-m-d\TH:i
+            try {
+                $datetimeStr = $request->datetime;
+                if (strpos($datetimeStr, 'T') !== false) {
+                    // صيغة ISO: 2025-12-26T14:30:00 أو 2025-12-26T14:30
+                    if (substr_count($datetimeStr, ':') == 1) {
+                        $datetime = \Carbon\Carbon::createFromFormat('Y-m-d\TH:i', $datetimeStr);
+                    } else {
+                        $datetime = \Carbon\Carbon::createFromFormat('Y-m-d\TH:i:s', $datetimeStr);
+                    }
+                } else {
+                    // صيغة عادية: 2025-12-26 14:30:00
+                    $datetime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $datetimeStr);
+                }
+            } catch (\Exception $e) {
+                return response()->json([
+                    'message' => 'صيغة التاريخ والوقت غير صحيحة. استخدم YYYY-MM-DDTHH:mm:ss أو YYYY-MM-DD HH:mm:ss',
+                    'errors' => [
+                        'datetime' => ['صيغة التاريخ والوقت غير صحيحة: ' . $e->getMessage()],
+                    ],
+                ], 422);
+            }
+
+            // التحقق من أن الموعد ليس في الماضي
+            if ($datetime->isPast()) {
+                return response()->json([
+                    'message' => 'لا يمكن حجز موعد في الماضي',
+                ], 400);
+            }
+
+            // إنشاء موعد مع وقت مخصص
+            $appointment = Appointment::create([
+                'consultation_id' => null,
+                'availability_id' => null, // لا يوجد availability_id للوقت المخصص
+                'lawyer_id' => $request->lawyer_id,
+                'client_id' => Auth::id(),
+                'subject' => $request->subject,
+                'description' => $request->description,
+                'datetime' => $datetime,
+                'type' => $request->type,
+                'meeting_link' => $request->meeting_link,
+                'notes' => $request->notes . ($request->notes ? ' | ' : '') . 'طلب وقت مخصص: ' . $request->preferred_date . ' ' . $request->preferred_time,
+                'status' => 'pending',
+            ]);
+
+            // إرسال إشعار للمحامي
+            $lawyer->notify(new NewAppointmentNotification($appointment));
+
+            $appointmentData = $appointment->load(['lawyer'])->toArray();
+            $appointmentData['is_custom_time_request'] = true;
+
             return response()->json([
-                'message' => 'لا يمكن حجز موعد في الماضي',
-            ], 400);
-        }
+                'message' => 'تم إرسال طلب الموعد بنجاح. سيتم تأكيد الوقت من قبل المحامي إذا كان متاحاً.',
+                'appointment' => $appointmentData,
+            ], 201);
 
-        // التحقق من عدم وجود موعد آخر في نفس الوقت
-        $existingAppointment = Appointment::where('availability_id', $availability->id)
-            ->where('status', '!=', 'cancelled')
-            ->first();
+        } else {
+            // Regular Booking Flow (مع availability_id)
+            $availability = LawyerAvailability::where('id', $request->availability_id)
+                ->where('lawyer_id', $request->lawyer_id)
+                ->where('is_vacation', false)
+                ->where('status', '!=', 'unavailable')
+                ->firstOrFail();
 
-        if ($existingAppointment) {
+            // التحقق من أن الوقت ليس محجوز
+            $isBooked = Appointment::where('availability_id', $availability->id)
+                ->where('status', '!=', 'cancelled')
+                ->exists();
+
+            if ($isBooked || $availability->status === 'booked') {
+                return response()->json([
+                    'message' => 'هذا الموعد محجوز بالفعل. يرجى اختيار وقت آخر.',
+                ], 400);
+            }
+
+            // التحقق من أن الموعد ليس في الماضي
+            $date = $availability->date;
+            $time = strlen($availability->start_time) == 5 ? $availability->start_time . ':00' : $availability->start_time;
+            $datetime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $time);
+            
+            if ($datetime->isPast()) {
+                return response()->json([
+                    'message' => 'لا يمكن حجز موعد في الماضي',
+                ], 400);
+            }
+
+            // التحقق من عدم وجود موعد آخر في نفس الوقت
+            $existingAppointment = Appointment::where('availability_id', $availability->id)
+                ->where('status', '!=', 'cancelled')
+                ->first();
+
+            if ($existingAppointment) {
+                return response()->json([
+                    'message' => 'هذا الموعد محجوز بالفعل',
+                ], 400);
+            }
+
+            // إنشاء الموعد
+            $appointment = Appointment::create([
+                'consultation_id' => null,
+                'availability_id' => $availability->id,
+                'lawyer_id' => $request->lawyer_id,
+                'client_id' => Auth::id(),
+                'subject' => $request->subject,
+                'description' => $request->description,
+                'datetime' => $datetime,
+                'type' => $request->type,
+                'meeting_link' => $request->meeting_link,
+                'notes' => $request->notes,
+                'status' => 'pending',
+            ]);
+
+            // تحديث حالة الـ availability
+            $availability->status = 'booked';
+            $availability->save();
+
+            // إرسال إشعار للمحامي
+            $lawyer->notify(new NewAppointmentNotification($appointment));
+
+            $appointmentData = $appointment->load(['lawyer'])->toArray();
+            $appointmentData['is_custom_time_request'] = false;
+
             return response()->json([
-                'message' => 'هذا الموعد محجوز بالفعل',
-            ], 400);
+                'message' => 'تم حجز الموعد بنجاح. سيتم تأكيده من قبل الموظف قريباً.',
+                'appointment' => $appointmentData,
+            ], 201);
         }
-
-        // إنشاء الموعد
-        $appointment = Appointment::create([
-            'consultation_id' => null, // بدون استشارة
-            'availability_id' => $availability->id,
-            'lawyer_id' => $request->lawyer_id,
-            'client_id' => Auth::id(),
-            'subject' => $request->subject,
-            'description' => $request->description,
-            'datetime' => $datetime,
-            'type' => $request->type,
-            'meeting_link' => $request->meeting_link,
-            'notes' => $request->notes,
-            'status' => 'pending',
-        ]);
-
-        // تحديث حالة الـ availability
-        $availability->status = 'booked';
-        $availability->save();
-
-        // إرسال إشعار للمحامي
-        $lawyer->notify(new NewAppointmentNotification($appointment));
-
-        return response()->json([
-            'message' => 'تم حجز الموعد بنجاح. سيتم تأكيده من قبل الموظف قريباً.',
-            'appointment' => $appointment->load(['lawyer']),
-        ], 201);
     }
 
     // حجز موعد من المواعيد المتاحة (مع استشارة)
@@ -151,9 +296,20 @@ class AppointmentController extends Controller
 
         $availability = LawyerAvailability::where('id', $request->availability_id)
             ->where('lawyer_id', $lawyerId)
-            ->where('status', 'available')
             ->where('is_vacation', false)
+            ->where('status', '!=', 'unavailable')
             ->firstOrFail();
+
+        // التحقق من أن الوقت ليس محجوز
+        $isBooked = Appointment::where('availability_id', $availability->id)
+            ->where('status', '!=', 'cancelled')
+            ->exists();
+
+        if ($isBooked || $availability->status === 'booked') {
+            return response()->json([
+                'message' => 'هذا الموعد محجوز بالفعل. يرجى اختيار وقت آخر.',
+            ], 400);
+        }
 
         // التحقق من عدم وجود موعد آخر في نفس الوقت
         $existingAppointment = Appointment::where('availability_id', $availability->id)
@@ -212,9 +368,24 @@ class AppointmentController extends Controller
             $query->where('status', $status);
         }
 
+        if ($date = $request->input('date')) {
+            $query->whereDate('datetime', $date);
+        }
+
+        if ($lawyerId = $request->input('lawyer_id')) {
+            $query->where('lawyer_id', $lawyerId);
+        }
+
         $appointments = $query->orderBy('datetime', 'asc')->get();
 
-        return response()->json($appointments);
+        // إضافة is_custom_time_request لكل موعد
+        $appointmentsData = $appointments->map(function ($appointment) {
+            $data = $appointment->toArray();
+            $data['is_custom_time_request'] = $appointment->is_custom_time_request;
+            return $data;
+        });
+
+        return response()->json($appointmentsData);
     }
 
     // عرض موعد محدد
@@ -231,7 +402,10 @@ class AppointmentController extends Controller
             ->where('client_id', Auth::id())
             ->findOrFail($id);
 
-        return response()->json($appointment);
+        $appointmentData = $appointment->toArray();
+        $appointmentData['is_custom_time_request'] = $appointment->is_custom_time_request;
+
+        return response()->json($appointmentData);
     }
 
     // إلغاء موعد من قبل العميل
