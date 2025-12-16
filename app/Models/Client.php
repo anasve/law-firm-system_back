@@ -23,6 +23,9 @@ class Client extends Authenticatable implements MustVerifyEmail
         'name',
         'email',
         'password',
+        'phone',
+        'address',
+        'photo',
         'status',
     ];
 
@@ -53,5 +56,18 @@ class Client extends Authenticatable implements MustVerifyEmail
     public function verificationUrl()
     {
         return url('/api/guest/verify-email/' . $this->getKey() . '/' . sha1($this->getEmailForVerification()));
+    }
+
+    /**
+     * Get the full URL for the client's photo.
+     *
+     * @return string|null
+     */
+    public function getPhotoUrlAttribute()
+    {
+        if ($this->photo) {
+            return asset('storage/' . $this->photo);
+        }
+        return null;
     }
 }

@@ -25,6 +25,9 @@ class ClientProfileRequest extends FormRequest
             'name'     => 'sometimes|string|max:255',
             'email'    => 'sometimes|email|unique:clients,email,' . auth('client')->id(),
             'password' => 'sometimes|string|min:8|confirmed',
+            'phone'    => 'sometimes|nullable|string|max:20',
+            'address'  => 'sometimes|nullable|string|max:500',
+            'photo'    => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ];
     }
 

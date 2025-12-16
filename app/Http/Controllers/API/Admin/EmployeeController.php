@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\Admin\Employee\StoreEmployeeRequest;
 use App\Http\Requests\Admin\Employee\UpdateEmployeeRequest;
 
@@ -17,7 +18,12 @@ class EmployeeController extends Controller
 
         $employees = Employee::query()
             ->when($request->query('search'), function ($query, $search) {
-                return $query->where('name', $search);
+                return $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('phone', 'like', "%{$search}%")
+                      ->orWhere('address', 'like', "%{$search}%");
+                });
             })
             ->latest()
             ->get();
@@ -48,6 +54,11 @@ class EmployeeController extends Controller
             $data['password'] = Hash::make($data['password']);
         }
 
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            $data['photo'] = $request->file('photo')->store('employees/photos', 'public');
+        }
+
         $employee = Employee::create($data);
 
         return response()->json([
@@ -64,6 +75,15 @@ class EmployeeController extends Controller
 
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
+        }
+
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            // Delete old photo if exists
+            if ($employee->photo) {
+                Storage::disk('public')->delete($employee->photo);
+            }
+            $data['photo'] = $request->file('photo')->store('employees/photos', 'public');
         }
 
         $employee->update($data);

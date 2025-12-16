@@ -81,5 +81,68 @@ class Appointment extends Model
     {
         return $query->whereNull('availability_id');
     }
+
+    // التحقق من انتهاء الموعد وتحديثه تلقائياً
+    public function checkAndMarkAsDone()
+    {
+        if ($this->status !== 'confirmed') {
+            return false;
+        }
+
+        $now = \Carbon\Carbon::now();
+        $endTime = null;
+
+        // إذا كان للموعد availability، استخدم end_time
+        if ($this->availability_id && $this->availability) {
+            $availability = $this->availability;
+            $date = $availability->date;
+            
+            // معالجة end_time (قد يكون H:i أو H:i:s)
+            $endTimeStr = $availability->end_time;
+            if (strlen($endTimeStr) == 5) {
+                // إذا كان بصيغة H:i، أضف :00
+                $endTimeStr .= ':00';
+            }
+            
+            try {
+                $endTime = \Carbon\Carbon::createFromFormat(
+                    'Y-m-d H:i:s',
+                    $date->format('Y-m-d') . ' ' . $endTimeStr
+                );
+            } catch (\Exception $e) {
+                // في حالة الخطأ، استخدم datetime + ساعة واحدة
+                $endTime = \Carbon\Carbon::parse($this->datetime)->addHour();
+            }
+        } else {
+            // إذا لم يكن له availability (custom time request)، استخدم datetime + ساعة واحدة كافتراضية
+            $endTime = \Carbon\Carbon::parse($this->datetime)->addHour();
+        }
+
+        // إذا انتهى وقت الموعد، قم بتحديث حالته
+        if ($endTime && $endTime->lt($now)) {
+            $this->status = 'done';
+            $this->save();
+            return true;
+        }
+
+        return false;
+    }
+
+    // تحديث جميع المواعيد المنتهية
+    public static function markCompletedAppointments()
+    {
+        $appointments = self::with('availability')
+            ->where('status', 'confirmed')
+            ->get();
+
+        $count = 0;
+        foreach ($appointments as $appointment) {
+            if ($appointment->checkAndMarkAsDone()) {
+                $count++;
+            }
+        }
+
+        return $count;
+    }
 }
 

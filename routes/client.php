@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Http\Controllers\API\Client\ClientAuthController;
+use App\Http\Controllers\API\Client\ClientProfileController;
 use App\Http\Controllers\API\Client\ConsultationController;
 use App\Http\Controllers\API\Client\AppointmentController;
 use App\Http\Controllers\API\Client\NotificationController;
@@ -16,10 +17,10 @@ Route::middleware('auth:client')->group(function () {
     // Logout
     Route::post('/logout', [ClientAuthController::class, 'logout']);
 
-    // Get authenticated client info
-    Route::get('/profile', function (Request $request) {
-        return $request->user();
-    });
+    // Profile routes
+    Route::get('/profile', [ClientProfileController::class, 'show']);
+    Route::put('/profile', [ClientProfileController::class, 'update']);
+    Route::patch('/profile', [ClientProfileController::class, 'update']);
 
     // Resend verification email
     Route::post('/email/verification-notification', function (Request $request) {
@@ -30,6 +31,7 @@ Route::middleware('auth:client')->group(function () {
     // Consultations routes
     Route::apiResource('consultations', ConsultationController::class);
     Route::post('consultations/{id}/cancel', [ConsultationController::class, 'cancel']);
+    Route::post('consultations/{id}/complete', [ConsultationController::class, 'complete']);
     Route::post('consultations/{consultationId}/messages', [ConsultationController::class, 'sendMessage']);
     Route::get('consultations/{consultationId}/messages', [ConsultationController::class, 'getMessages']);
     Route::post('consultations/{consultationId}/review', [ConsultationController::class, 'createReview']);

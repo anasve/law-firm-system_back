@@ -18,10 +18,18 @@ class ClientAuthController extends Controller
     {
         $data = $request->validated();
 
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            $data['photo'] = $request->file('photo')->store('clients/photos', 'public');
+        }
+
         $client = Client::create([
             'name'     => $data['name'],
             'email'    => $data['email'],
             'password' => bcrypt($data['password']),
+            'phone'    => $data['phone'] ?? null,
+            'address'  => $data['address'] ?? null,
+            'photo'    => $data['photo'] ?? null,
             'status'   => 'pending',
         ]);
 
@@ -67,9 +75,12 @@ class ClientAuthController extends Controller
         return response()->json([
             'token'  => $token,
             'client' => [
-                'id'    => $client->id,
-                'name'  => $client->name,
-                'email' => $client->email,
+                'id'      => $client->id,
+                'name'    => $client->name,
+                'email'   => $client->email,
+                'phone'   => $client->phone,
+                'address' => $client->address,
+                'photo'   => $client->photo,
             ],
         ]);
     }

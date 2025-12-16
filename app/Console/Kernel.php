@@ -14,6 +14,9 @@ class Kernel extends ConsoleKernel
     {
         // إرسال تذكيرات المواعيد كل 5 دقائق
         $schedule->command('appointments:send-reminders')->everyFiveMinutes();
+        
+        // تحديث المواعيد المنتهية إلى done كل دقيقة
+        $schedule->command('appointments:mark-completed')->everyMinute();
     }
 
     /**

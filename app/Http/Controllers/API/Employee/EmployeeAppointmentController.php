@@ -12,7 +12,10 @@ class EmployeeAppointmentController extends Controller
     // عرض جميع المواعيد
     public function index(Request $request)
     {
-        $query = Appointment::with(['client', 'lawyer', 'consultation']);
+        // تحديث المواعيد المنتهية تلقائياً قبل جلبها
+        Appointment::markCompletedAppointments();
+
+        $query = Appointment::with(['client', 'lawyer', 'consultation', 'availability']);
 
         if ($lawyerId = $request->input('lawyer_id')) {
             $query->where('lawyer_id', $lawyerId);
@@ -81,55 +84,46 @@ class EmployeeAppointmentController extends Controller
         return response()->json($appointmentData);
     }
 
-    // تحديث موعد
-    public function update(Request $request, $id)
+    // قبول موعد (Accept Appointment)
+    public function accept(Request $request, $id)
     {
-        $appointment = Appointment::findOrFail($id);
-
         $request->validate([
-            'datetime' => 'sometimes|date|after:now',
-            'type' => 'sometimes|in:online,in_office,phone',
-            'meeting_link' => 'nullable|url|required_if:type,online',
-            'notes' => 'nullable|string|max:1000',
-            'status' => 'sometimes|in:pending,confirmed,done,cancelled',
+            'availability_id' => 'nullable|exists:lawyer_availability,id',
+            'notes' => 'nullable|string|max:500',
         ]);
 
-        $appointment->update($request->only([
-            'datetime', 'type', 'meeting_link', 'notes', 'status'
-        ]));
-
-        return response()->json([
-            'message' => 'تم تحديث الموعد بنجاح',
-            'appointment' => $appointment->load(['client', 'lawyer', 'consultation']),
-        ]);
-    }
-
-    // حذف موعد
-    public function destroy($id)
-    {
         $appointment = Appointment::findOrFail($id);
 
-        // إعادة تفعيل الـ availability إذا كان موجود
-        if ($appointment->availability_id) {
-            $availability = LawyerAvailability::find($appointment->availability_id);
-            if ($availability) {
-                $availability->status = 'available';
-                $availability->save();
-            }
+        // التحقق من أن الموعد في حالة pending
+        if ($appointment->status !== 'pending') {
+            return response()->json([
+                'message' => 'يمكن قبول المواعيد في حالة pending فقط',
+            ], 400);
         }
 
-        $appointment->delete();
+        // إذا كان موعد بوقت مخصص وتم إرسال availability_id، قم بتعيينه
+        if ($request->has('availability_id') && $appointment->is_custom_time_request) {
+            $availability = LawyerAvailability::where('id', $request->availability_id)
+                ->where('lawyer_id', $appointment->lawyer_id)
+                ->where('status', 'available')
+                ->firstOrFail();
 
-        return response()->json([
-            'message' => 'تم حذف الموعد بنجاح',
-        ]);
-    }
+            // تحديث الموعد
+            $appointment->availability_id = $availability->id;
+            $date = $availability->date;
+            $time = strlen($availability->start_time) == 5 ? $availability->start_time . ':00' : $availability->start_time;
+            $appointment->datetime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $time);
 
-    // تأكيد موعد
-    public function confirm($id)
-    {
-        $appointment = Appointment::findOrFail($id);
+            // تحديث الـ availability
+            $availability->status = 'booked';
+            $availability->save();
+        }
+
+        // قبول الموعد
         $appointment->status = 'confirmed';
+        if ($request->has('notes')) {
+            $appointment->notes = ($appointment->notes ? $appointment->notes . ' | ' : '') . $request->notes;
+        }
         $appointment->save();
 
         // إرسال إشعار للعميل والمحامي
@@ -137,22 +131,31 @@ class EmployeeAppointmentController extends Controller
         $appointment->lawyer->notify(new \App\Notifications\Consultation\AppointmentConfirmedNotification($appointment));
 
         return response()->json([
-            'message' => 'تم تأكيد الموعد بنجاح',
-            'appointment' => $appointment->load(['client', 'lawyer', 'consultation']),
+            'message' => 'تم قبول الموعد بنجاح',
+            'appointment' => $appointment->load(['client', 'lawyer', 'consultation', 'availability']),
         ]);
     }
 
-    // إلغاء موعد
-    public function cancel(Request $request, $id)
+    // رفض موعد (Reject Appointment)
+    public function reject(Request $request, $id)
     {
         $request->validate([
-            'cancellation_reason' => 'nullable|string|max:500',
+            'rejection_reason' => 'required|string|max:500',
         ]);
 
         $appointment = Appointment::findOrFail($id);
+
+        // التحقق من أن الموعد في حالة pending
+        if ($appointment->status !== 'pending') {
+            return response()->json([
+                'message' => 'يمكن رفض المواعيد في حالة pending فقط',
+            ], 400);
+        }
+
+        // رفض الموعد
         $appointment->status = 'cancelled';
         $appointment->cancelled_by = 'employee';
-        $appointment->cancellation_reason = $request->cancellation_reason;
+        $appointment->cancellation_reason = $request->rejection_reason;
         $appointment->save();
 
         // إعادة تفعيل الـ availability
@@ -168,7 +171,7 @@ class EmployeeAppointmentController extends Controller
         $appointment->client->notify(new \App\Notifications\Consultation\AppointmentCancelledNotification($appointment));
 
         return response()->json([
-            'message' => 'تم إلغاء الموعد بنجاح',
+            'message' => 'تم رفض الموعد بنجاح',
             'appointment' => $appointment->load(['client', 'lawyer', 'consultation']),
         ]);
     }
@@ -339,63 +342,5 @@ class EmployeeAppointmentController extends Controller
         ]);
     }
 
-    // إضافة موعد مباشرة من التقويم
-    public function createFromCalendar(Request $request)
-    {
-        $request->validate([
-            'lawyer_id' => 'required|exists:lawyers,id',
-            'client_id' => 'required|exists:clients,id',
-            'date' => 'required|date|after_or_equal:' . now()->format('Y-m-d'),
-            'time' => 'required|date_format:H:i',
-            'type' => 'required|in:online,in_office,phone',
-            'subject' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'meeting_link' => 'nullable|url|required_if:type,online',
-            'notes' => 'nullable|string|max:1000',
-        ]);
-
-        $date = $request->input('date');
-        $time = $request->input('time');
-        $datetime = \Carbon\Carbon::createFromFormat('Y-m-d H:i', $date . ' ' . $time);
-
-        if ($datetime->isPast()) {
-            return response()->json([
-                'message' => 'لا يمكن حجز موعد في الماضي',
-            ], 400);
-        }
-
-        // البحث عن availability مناسب أو إنشاء موعد مباشر
-        $availability = LawyerAvailability::where('lawyer_id', $request->lawyer_id)
-            ->where('date', $date)
-            ->where('start_time', '<=', $time)
-            ->where('end_time', '>', $time)
-            ->where('status', 'available')
-            ->where('is_vacation', false)
-            ->first();
-
-        $appointment = Appointment::create([
-            'consultation_id' => null,
-            'availability_id' => $availability?->id,
-            'lawyer_id' => $request->lawyer_id,
-            'client_id' => $request->client_id,
-            'subject' => $request->subject,
-            'description' => $request->description,
-            'datetime' => $datetime,
-            'type' => $request->type,
-            'meeting_link' => $request->meeting_link,
-            'notes' => $request->notes,
-            'status' => 'pending',
-        ]);
-
-        if ($availability) {
-            $availability->status = 'booked';
-            $availability->save();
-        }
-
-        return response()->json([
-            'message' => 'تم إنشاء الموعد بنجاح',
-            'appointment' => $appointment->load(['client', 'lawyer']),
-        ], 201);
-    }
 }
 

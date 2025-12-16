@@ -51,12 +51,9 @@ Route::middleware('auth:employee')->group(function () {
     Route::get('appointments/calendar/month', [EmployeeAppointmentController::class, 'calendarMonth']); // تقويم شهري
     Route::get('appointments/calendar/week', [EmployeeAppointmentController::class, 'calendarWeek']); // تقويم أسبوعي
     Route::get('appointments/calendar/day', [EmployeeAppointmentController::class, 'calendarDay']); // تقويم يومي
-    Route::post('appointments/calendar/create', [EmployeeAppointmentController::class, 'createFromCalendar']); // إضافة موعد من التقويم
     Route::get('appointments/{id}', [EmployeeAppointmentController::class, 'show']);
-    Route::put('appointments/{id}', [EmployeeAppointmentController::class, 'update']);
-    Route::delete('appointments/{id}', [EmployeeAppointmentController::class, 'destroy']);
-    Route::post('appointments/{id}/confirm', [EmployeeAppointmentController::class, 'confirm']);
-    Route::post('appointments/{id}/cancel', [EmployeeAppointmentController::class, 'cancel']);
+    Route::post('appointments/{id}/accept', [EmployeeAppointmentController::class, 'accept']); // قبول موعد
+    Route::post('appointments/{id}/reject', [EmployeeAppointmentController::class, 'reject']); // رفض موعد
 
     // Consultations management routes (إدارة الاستشارات)
     Route::get('consultations', [EmployeeConsultationController::class, 'index']);

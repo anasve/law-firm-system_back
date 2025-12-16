@@ -25,6 +25,8 @@ class StoreEmployeeRequest extends FormRequest
             'email'    => 'required|email|unique:employees,email',
             'password' => 'required|string|min:6|confirmed',
             'age'      => 'required|integer|min:18',
+            'phone'    => 'nullable|string|max:20',
+            'address'  => 'nullable|string|max:500',
             'photo'    => 'nullable|image',
         ];
     }

@@ -26,6 +26,8 @@ class UpdateEmployeeRequest extends FormRequest
             'email'    => 'sometimes|email|unique:employees,email,' . $this->route('employee'),
             'password' => 'sometimes|nullable|string|min:6|confirmed',
             'age'      => 'sometimes|required|integer|min:18',
+            'phone'    => 'sometimes|nullable|string|max:20',
+            'address'  => 'sometimes|nullable|string|max:500',
             'photo'    => 'sometimes|nullable|image',
 
         ];

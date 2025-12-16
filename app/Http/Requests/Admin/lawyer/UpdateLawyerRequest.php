@@ -38,6 +38,8 @@ class UpdateLawyerRequest extends FormRequest
             'password'             => 'sometimes|nullable|string|min:6|confirmed',
 
             'age'                  => 'sometimes|required|integer|min:18',
+            'phone'                => 'sometimes|nullable|string|max:20',
+            'address'              => 'sometimes|nullable|string|max:500',
 
             'photo'                => 'sometimes|nullable|image',
             'certificate'          => 'sometimes|nullable|file',

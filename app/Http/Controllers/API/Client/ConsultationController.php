@@ -235,6 +235,29 @@ class ConsultationController extends Controller
         return response()->json(['message' => 'تم إلغاء الاستشارة بنجاح']);
     }
 
+    // إكمال الاستشارة
+    public function complete($id)
+    {
+        $consultation = Consultation::where('client_id', Auth::id())
+            ->whereIn('status', ['accepted', 'pending'])
+            ->findOrFail($id);
+
+        // التحقق من وجود محامي للاستشارة
+        if (!$consultation->lawyer_id) {
+            return response()->json([
+                'message' => 'لا يمكن إكمال الاستشارة بدون محامي محدد',
+            ], 400);
+        }
+
+        $consultation->status = 'completed';
+        $consultation->save();
+
+        return response()->json([
+            'message' => 'تم إكمال الاستشارة بنجاح',
+            'consultation' => $consultation->load(['lawyer', 'specialization']),
+        ]);
+    }
+
     // إنشاء تقييم للاستشارة
     public function createReview(CreateReviewRequest $request, $consultationId)
     {

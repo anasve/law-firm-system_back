@@ -43,6 +43,7 @@ class NewClientRegistrationNotification extends Notification
             ->line('A new client has just registered and is waiting for approval.')
             ->line('Client Name: ' . $this->client->name)
             ->line('Email: ' . $this->client->email)
+            ->line('Phone: ' . ($this->client->phone ?? 'N/A'))
             ->line('Please review and activate their account if appropriate.')
             ->action('View Clients', url('/dashboard/employees/clients')) // adjust URL as needed
             ->line('Thank you.');
@@ -58,7 +59,9 @@ class NewClientRegistrationNotification extends Notification
         return [
             'message'      => 'New client registered: ' . $this->client->name,
             'client_id'    => $this->client->id,
+            'client_name'  => $this->client->name,
             'client_email' => $this->client->email,
+            'client_phone' => $this->client->phone,
         ];
     }
 }

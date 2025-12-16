@@ -36,6 +36,8 @@ class LawyerController extends Controller
                 'name'            => $lawyer->name,
                 'email'           => $lawyer->email,
                 'age'             => $lawyer->age,
+                'phone'           => $lawyer->phone,
+                'address'         => $lawyer->address,
                 'photo'           => $lawyer->photo,
                 'certificate'     => $lawyer->certificate,
                 'specializations' => $lawyer->specializations->pluck('name'),
@@ -55,6 +57,8 @@ class LawyerController extends Controller
             'name'            => $lawyer->name,
             'email'           => $lawyer->email,
             'age'             => $lawyer->age,
+            'phone'           => $lawyer->phone,
+            'address'         => $lawyer->address,
             'photo'           => $lawyer->photo,
             'certificate'     => $lawyer->certificate,
             'specializations' => $lawyer->specializations->pluck('name'),
@@ -91,6 +95,8 @@ class LawyerController extends Controller
                 'name'            => $lawyer->name,
                 'email'           => $lawyer->email,
                 'age'             => $lawyer->age,
+                'phone'           => $lawyer->phone,
+                'address'         => $lawyer->address,
                 'photo'           => $lawyer->photo,
                 'certificate'     => $lawyer->certificate,
                 'specializations' => $lawyer->specializations->pluck('name'),
@@ -105,11 +111,19 @@ class LawyerController extends Controller
         $data   = $request->validated();
 
         if ($request->hasFile('photo')) {
-            $data['photo'] = $request->file('photo')->store('photos', 'public');
+            // Delete old photo if exists
+            if ($lawyer->photo) {
+                Storage::disk('public')->delete($lawyer->photo);
+            }
+            $data['photo'] = $request->file('photo')->store('lawyers/photos', 'public');
         }
 
         if ($request->hasFile('certificate')) {
-            $data['certificate'] = $request->file('certificate')->store('certificates', 'public');
+            // Delete old certificate if exists
+            if ($lawyer->certificate) {
+                Storage::disk('public')->delete($lawyer->certificate);
+            }
+            $data['certificate'] = $request->file('certificate')->store('lawyers/certificates', 'public');
         }
 
         if (isset($data['password'])) {
@@ -131,6 +145,8 @@ class LawyerController extends Controller
                 'name'            => $lawyer->name,
                 'email'           => $lawyer->email,
                 'age'             => $lawyer->age,
+                'phone'           => $lawyer->phone,
+                'address'         => $lawyer->address,
                 'photo'           => $lawyer->photo,
                 'certificate'     => $lawyer->certificate,
                 'specializations' => $lawyer->specializations->pluck('name'),
@@ -154,6 +170,8 @@ class LawyerController extends Controller
                 'name'            => $lawyer->name,
                 'email'           => $lawyer->email,
                 'age'             => $lawyer->age,
+                'phone'           => $lawyer->phone,
+                'address'         => $lawyer->address,
                 'photo'           => $lawyer->photo,
                 'certificate'     => $lawyer->certificate,
                 'specializations' => $lawyer->specializations->pluck('name'),

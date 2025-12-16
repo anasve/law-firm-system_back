@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Lawyer;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use App\Http\Requests\Lawyer\LawyerProfileRequest;
 
 class LawyerProfileController extends Controller
@@ -19,6 +20,8 @@ class LawyerProfileController extends Controller
                 'name'            => $lawyer->name,
                 'email'           => $lawyer->email,
                 'age'             => $lawyer->age,
+                'phone'           => $lawyer->phone,
+                'address'         => $lawyer->address,
                 'specializations' => $lawyer->specializations()->pluck('name'), // return all specialization names
                 'photo'           => $lawyer->photo,
                 'certificate'     => $lawyer->certificate,
@@ -38,11 +41,19 @@ class LawyerProfileController extends Controller
 
         // Handle file uploads
         if ($request->hasFile('photo')) {
-            $data['photo'] = $request->file('photo')->store('photos', 'public');
+            // Delete old photo if exists
+            if ($lawyer->photo) {
+                Storage::disk('public')->delete($lawyer->photo);
+            }
+            $data['photo'] = $request->file('photo')->store('lawyers/photos', 'public');
         }
 
         if ($request->hasFile('certificate')) {
-            $data['certificate'] = $request->file('certificate')->store('certificates', 'public');
+            // Delete old certificate if exists
+            if ($lawyer->certificate) {
+                Storage::disk('public')->delete($lawyer->certificate);
+            }
+            $data['certificate'] = $request->file('certificate')->store('lawyers/certificates', 'public');
         }
 
         // Hash password if provided

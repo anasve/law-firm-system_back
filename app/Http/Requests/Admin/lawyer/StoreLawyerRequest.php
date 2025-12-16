@@ -25,6 +25,8 @@ class StoreLawyerRequest extends FormRequest
             'name'               => 'required|string|max:255',
             'email'              => 'required|email|unique:lawyers,email',
             'age'                => 'required|integer|min:18',
+            'phone'              => 'nullable|string|max:20',
+            'address'            => 'nullable|string|max:500',
             'photo'              => 'nullable|image',
             'password'           => 'required|string|min:6|confirmed',
             'certificate'        => 'nullable|file',

@@ -7,6 +7,7 @@ use App\Notifications\Client\ClientApprovedNotification;
 use App\Notifications\Client\ClientRejectedNotification;
 use App\Notifications\Client\ClientSuspendedNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ClientManagementController extends Controller
 {
@@ -21,7 +22,9 @@ class ClientManagementController extends Controller
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%$search%")
-                    ->orWhere('email', 'like', "%$search%");
+                    ->orWhere('email', 'like', "%$search%")
+                    ->orWhere('phone', 'like', "%$search%")
+                    ->orWhere('address', 'like', "%$search%");
             });
         }
 
@@ -79,9 +82,21 @@ class ClientManagementController extends Controller
         $client = Client::findOrFail($id);
 
         $data = $request->validate([
-            'name'  => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:clients,email,' . $client->id,
+            'name'    => 'sometimes|required|string|max:255',
+            'email'   => 'sometimes|required|email|unique:clients,email,' . $client->id,
+            'phone'   => 'sometimes|nullable|string|max:20',
+            'address' => 'sometimes|nullable|string|max:500',
+            'photo'   => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            // Delete old photo if exists
+            if ($client->photo) {
+                Storage::disk('public')->delete($client->photo);
+            }
+            $data['photo'] = $request->file('photo')->store('clients/photos', 'public');
+        }
 
         $client->update($data);
 
