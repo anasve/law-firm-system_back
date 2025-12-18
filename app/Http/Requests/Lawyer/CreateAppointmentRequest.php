@@ -15,8 +15,6 @@ class CreateAppointmentRequest extends FormRequest
     {
         return [
             'datetime' => 'required|date|after:now',
-            'type' => 'required|in:online,in_office,phone',
-            'meeting_link' => 'nullable|url|required_if:type,online',
             'notes' => 'nullable|string|max:1000',
         ];
     }

@@ -6,6 +6,7 @@ use App\Http\Controllers\API\Client\ClientAuthController;
 use App\Http\Controllers\API\Client\ClientProfileController;
 use App\Http\Controllers\API\Client\ConsultationController;
 use App\Http\Controllers\API\Client\AppointmentController;
+use App\Http\Controllers\API\Client\ClientLawController;
 use App\Http\Controllers\API\Client\NotificationController;
 
 // -----------------
@@ -45,6 +46,11 @@ Route::middleware('auth:client')->group(function () {
     Route::get('appointments/{id}', [AppointmentController::class, 'show'])->where('id', '[0-9]+');
     Route::post('appointments/{id}/cancel', [AppointmentController::class, 'cancel'])->where('id', '[0-9]+');
     Route::post('appointments/{id}/reschedule', [AppointmentController::class, 'reschedule'])->where('id', '[0-9]+'); // إعادة جدولة
+
+    // Laws routes
+    Route::get('laws', [ClientLawController::class, 'index']);
+    Route::get('laws/categories', [ClientLawController::class, 'categories']);
+    Route::get('laws/{id}', [ClientLawController::class, 'show']);
 
     // Notifications routes
     Route::get('notifications', [NotificationController::class, 'index']);

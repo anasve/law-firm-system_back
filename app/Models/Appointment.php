@@ -19,7 +19,6 @@ class Appointment extends Model
         'description',
         'datetime',
         'type',
-        'meeting_link',
         'notes',
         'status',
         'cancellation_reason',

@@ -33,10 +33,7 @@ class AppointmentConfirmedNotification extends Notification
             ->line('تم تأكيد موعدك بنجاح')
             ->line('التاريخ والوقت: ' . $datetime)
             ->line('المحامي: ' . $this->appointment->lawyer->name)
-            ->line('النوع: ' . $this->getTypeArabic($this->appointment->type))
-            ->when($this->appointment->meeting_link, function ($mail) {
-                return $mail->action('انضم للاجتماع', $this->appointment->meeting_link);
-            })
+            ->line('النوع: في المكتب')
             ->line('نتمنى لك استشارة ناجحة');
     }
 
@@ -48,18 +45,8 @@ class AppointmentConfirmedNotification extends Notification
             'appointment_id' => $this->appointment->id,
             'consultation_id' => $this->appointment->consultation_id,
             'datetime' => $this->appointment->datetime->format('Y-m-d H:i'),
-            'meeting_link' => $this->appointment->meeting_link,
         ];
     }
 
-    private function getTypeArabic($type)
-    {
-        return match($type) {
-            'online' => 'اجتماع افتراضي',
-            'in_office' => 'في المكتب',
-            'phone' => 'مكالمة هاتفية',
-            default => $type,
-        };
-    }
 }
 

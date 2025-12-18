@@ -27,13 +27,9 @@ class StoreConsultationRequest extends FormRequest
             'subject' => 'required|string|max:255',
             'description' => 'required|string|min:10',
             'priority' => 'required|in:normal,urgent',
-            'preferred_channel' => 'required|in:chat,in_office,call,appointment',
+            'preferred_channel' => 'required|in:chat,meeting_link',
+            'meeting_link' => 'nullable|url|required_if:preferred_channel,meeting_link',
             'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:10240', // 10MB max
-            // إذا اختار appointment، يجب إرسال بيانات الموعد
-            'appointment_availability_id' => 'nullable|required_if:preferred_channel,appointment|exists:lawyer_availability,id',
-            'appointment_type' => 'nullable|required_if:preferred_channel,appointment|in:online,in_office,phone',
-            'appointment_meeting_link' => 'nullable|url|required_if:appointment_type,online',
-            'appointment_notes' => 'nullable|string|max:1000',
         ];
     }
 
@@ -47,9 +43,9 @@ class StoreConsultationRequest extends FormRequest
             'description.min' => 'وصف المشكلة يجب أن يكون على الأقل 10 أحرف.',
             'priority.required' => 'درجة الأولوية مطلوبة.',
             'preferred_channel.required' => 'طريقة الاستشارة المفضلة مطلوبة.',
-            'appointment_availability_id.required_if' => 'يجب اختيار موعد عند اختيار طريقة الموعد.',
-            'appointment_type.required_if' => 'نوع الموعد مطلوب.',
-            'appointment_meeting_link.required_if' => 'رابط الاجتماع مطلوب للاجتماعات الافتراضية.',
+            'preferred_channel.in' => 'طريقة الاستشارة يجب أن تكون إما شات أو رابط اجتماع.',
+            'meeting_link.required_if' => 'رابط الاجتماع مطلوب عند اختيار طريقة رابط الاجتماع.',
+            'meeting_link.url' => 'رابط الاجتماع يجب أن يكون رابطاً صحيحاً.',
             'attachments.*.file' => 'يجب أن يكون المرفق ملفاً صحيحاً.',
             'attachments.*.max' => 'حجم الملف يجب أن يكون أقل من 10 ميجابايت.',
         ];

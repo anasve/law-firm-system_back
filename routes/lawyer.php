@@ -5,6 +5,7 @@ use App\Http\Controllers\API\Lawyer\LawyerAuthController;
 use App\Http\Controllers\API\lawyer\LawyerProfileController;
 use App\Http\Controllers\API\Lawyer\LawyerConsultationController;
 use App\Http\Controllers\API\Lawyer\LawyerAppointmentController;
+use App\Http\Controllers\API\Lawyer\LawyerLawController;
 use App\Http\Controllers\API\Lawyer\NotificationController;
 
 Route::post('/login', [LawyerAuthController::class, 'login']);
@@ -31,6 +32,11 @@ Route::middleware('auth:lawyer')->group(function () {
     Route::get('appointments/upcoming', [LawyerAppointmentController::class, 'upcoming']);
     Route::get('appointments/calendar/month', [LawyerAppointmentController::class, 'calendarMonth']); // تقويم شهري
     Route::get('appointments/{id}', [LawyerAppointmentController::class, 'show']);
+
+    // Laws routes
+    Route::get('laws', [LawyerLawController::class, 'index']);
+    Route::get('laws/categories', [LawyerLawController::class, 'categories']);
+    Route::get('laws/{id}', [LawyerLawController::class, 'show']);
 
     // Notifications routes
     Route::get('notifications', [NotificationController::class, 'index']);

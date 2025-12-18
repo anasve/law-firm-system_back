@@ -117,15 +117,12 @@ class AppointmentController extends Controller
             'preferred_date' => 'required_with:datetime|nullable|date|after_or_equal:' . now()->format('Y-m-d'),
             'subject' => 'required|string|min:1|max:255',
             'description' => 'required|string|min:10',
-            'type' => 'required|in:online,in_office,phone',
-            'meeting_link' => 'nullable|url|required_if:type,online',
             'notes' => 'nullable|string|max:1000',
         ], [
             'availability_id.required_without' => 'يجب إرسال إما availability_id أو datetime',
             'datetime.required_without' => 'يجب إرسال إما availability_id أو datetime',
             'preferred_time.required_with' => 'preferred_time مطلوب عند إرسال datetime',
             'preferred_date.required_with' => 'preferred_date مطلوب عند إرسال datetime',
-            'meeting_link.required_if' => 'رابط الاجتماع مطلوب للاجتماعات الافتراضية',
         ]);
 
         // التحقق من عدم إرسال كليهما
@@ -183,8 +180,7 @@ class AppointmentController extends Controller
                 'subject' => $request->subject,
                 'description' => $request->description,
                 'datetime' => $datetime,
-                'type' => $request->type,
-                'meeting_link' => $request->meeting_link,
+                'type' => 'in_office',
                 'notes' => $request->notes . ($request->notes ? ' | ' : '') . 'طلب وقت مخصص: ' . $request->preferred_date . ' ' . $request->preferred_time,
                 'status' => 'pending',
             ]);
@@ -250,8 +246,7 @@ class AppointmentController extends Controller
                 'subject' => $request->subject,
                 'description' => $request->description,
                 'datetime' => $datetime,
-                'type' => $request->type,
-                'meeting_link' => $request->meeting_link,
+                'type' => 'in_office',
                 'notes' => $request->notes,
                 'status' => 'pending',
             ]);
@@ -278,8 +273,6 @@ class AppointmentController extends Controller
     {
         $request->validate([
             'availability_id' => 'required|exists:lawyer_availability,id',
-            'type' => 'required|in:online,in_office,phone',
-            'meeting_link' => 'nullable|url|required_if:type,online',
             'notes' => 'nullable|string|max:1000',
         ]);
 
@@ -339,8 +332,7 @@ class AppointmentController extends Controller
             'lawyer_id' => $lawyerId,
             'client_id' => Auth::id(),
             'datetime' => $datetime,
-            'type' => $request->type,
-            'meeting_link' => $request->meeting_link,
+            'type' => 'in_office',
             'notes' => $request->notes,
             'status' => 'pending',
         ]);

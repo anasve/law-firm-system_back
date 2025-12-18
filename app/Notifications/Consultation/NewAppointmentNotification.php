@@ -33,7 +33,7 @@ class NewAppointmentNotification extends Notification
             ->greeting('مرحباً ' . $notifiable->name)
             ->line('لديك موعد جديد مع العميل ' . $clientName)
             ->line('التاريخ والوقت: ' . $datetime)
-            ->line('النوع: ' . $this->getTypeArabic($this->appointment->type))
+            ->line('النوع: في المكتب')
             ->action('عرض الموعد', url('/appointments/' . $this->appointment->id))
             ->line('شكراً لك');
     }
@@ -50,14 +50,5 @@ class NewAppointmentNotification extends Notification
         ];
     }
 
-    private function getTypeArabic($type)
-    {
-        return match($type) {
-            'online' => 'اجتماع افتراضي',
-            'in_office' => 'في المكتب',
-            'phone' => 'مكالمة هاتفية',
-            default => $type,
-        };
-    }
 }
 

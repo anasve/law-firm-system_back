@@ -159,8 +159,7 @@ class LawyerConsultationController extends Controller
             'lawyer_id' => Auth::id(),
             'client_id' => $consultation->client_id,
             'datetime' => $request->datetime,
-            'type' => $request->type,
-            'meeting_link' => $request->meeting_link,
+            'type' => 'in_office',
             'notes' => $request->notes,
             'status' => 'pending',
         ]);

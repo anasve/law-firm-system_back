@@ -10,12 +10,8 @@ use App\Models\Consultation;
 use App\Models\ConsultationMessage;
 use App\Models\ConsultationAttachment;
 use App\Models\ConsultationReview;
-use App\Models\Appointment;
-use App\Models\LawyerAvailability;
 use App\Notifications\Consultation\NewMessageNotification;
 use App\Notifications\Consultation\NewConsultationNotification;
-use App\Notifications\Consultation\NewAppointmentNotification;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -71,6 +67,11 @@ class ConsultationController extends Controller
             }
         }
 
+        // إضافة meeting_link إذا كان preferred_channel هو meeting_link
+        if ($request->preferred_channel === 'meeting_link' && $request->has('meeting_link')) {
+            $data['meeting_link'] = $request->meeting_link;
+        }
+
         $consultation = Consultation::create($data);
 
         // رفع المرفقات
@@ -89,89 +90,15 @@ class ConsultationController extends Controller
 
         $consultation->load(['lawyer', 'specialization', 'attachments']);
 
-        $appointment = null;
-
-        // إذا اختار العميل حجز موعد مباشر
-        if ($request->preferred_channel === 'appointment' && $request->has('appointment_availability_id')) {
-            // يجب أن يكون هناك محامي محدد
-            if (!$consultation->lawyer_id) {
-                return response()->json([
-                    'message' => 'يجب اختيار محامي محدد لحجز موعد مباشر',
-                ], 400);
-            }
-
-            $availability = LawyerAvailability::where('id', $request->appointment_availability_id)
-                ->where('lawyer_id', $consultation->lawyer_id)
-                ->where('status', 'available')
-                ->where('is_vacation', false)
-                ->firstOrFail();
-
-            // التحقق من عدم وجود موعد آخر
-            $existingAppointment = Appointment::where('availability_id', $availability->id)
-                ->where('status', '!=', 'cancelled')
-                ->first();
-
-            if ($existingAppointment) {
-                return response()->json([
-                    'message' => 'هذا الموعد محجوز بالفعل',
-                ], 400);
-            }
-
-            // إنشاء الموعد
-            $date = $availability->date;
-            $time = strlen($availability->start_time) == 5 ? $availability->start_time . ':00' : $availability->start_time;
-            $datetime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $date->format('Y-m-d') . ' ' . $time);
-
-            if ($datetime->isPast()) {
-                return response()->json([
-                    'message' => 'لا يمكن حجز موعد في الماضي',
-                ], 400);
-            }
-
-            $appointment = Appointment::create([
-                'consultation_id' => $consultation->id,
-                'availability_id' => $availability->id,
-                'lawyer_id' => $consultation->lawyer_id,
-                'client_id' => Auth::id(),
-                'datetime' => $datetime,
-                'type' => $request->appointment_type,
-                'meeting_link' => $request->appointment_meeting_link,
-                'notes' => $request->appointment_notes,
-                'status' => 'pending',
-            ]);
-
-            // تحديث حالة الـ availability
-            $availability->status = 'booked';
-            $availability->save();
-
-            // إذا كان المحامي محدد، قبول الاستشارة تلقائياً
-            if ($consultation->lawyer_id) {
-                $consultation->status = 'accepted';
-                $consultation->save();
-            }
-        }
-
         // إرسال إشعار للمحامي إذا تم تعيينه
         if ($consultation->lawyer) {
             $consultation->lawyer->notify(new NewConsultationNotification($consultation));
-            
-            // إشعار بالموعد إذا تم حجزه
-            if ($appointment) {
-                $consultation->lawyer->notify(new NewAppointmentNotification($appointment));
-            }
         }
 
-        $response = [
+        return response()->json([
             'message' => 'تم إنشاء الاستشارة بنجاح',
             'consultation' => $consultation->load(['lawyer', 'specialization', 'attachments']),
-        ];
-
-        if ($appointment) {
-            $response['appointment'] = $appointment->load(['lawyer', 'availability']);
-            $response['message'] = 'تم إنشاء الاستشارة وحجز الموعد بنجاح';
-        }
-
-        return response()->json($response, 201);
+        ], 201);
     }
 
     // إرسال رسالة في المحادثة

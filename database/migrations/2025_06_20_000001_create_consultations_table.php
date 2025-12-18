@@ -19,7 +19,8 @@ return new class extends Migration
             $table->string('subject');
             $table->text('description');
             $table->enum('priority', ['normal', 'urgent'])->default('normal');
-            $table->enum('preferred_channel', ['chat', 'in_office', 'call'])->default('chat');
+            $table->enum('preferred_channel', ['chat', 'meeting_link'])->default('chat');
+            $table->string('meeting_link')->nullable(); // رابط الاجتماع عند اختيار meeting_link
             $table->enum('status', ['pending', 'accepted', 'rejected', 'completed', 'cancelled'])->default('pending');
             $table->text('rejection_reason')->nullable();
             $table->text('legal_summary')->nullable(); // ملخص قانوني من المحامي

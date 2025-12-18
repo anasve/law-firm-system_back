@@ -1,13 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\API\Lawyer;
+namespace App\Http\Controllers\API\Client;
 
 use App\Models\Law;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 
-class LawyerLawController extends Controller
+class ClientLawController extends Controller
 {
+    /**
+     * عرض جميع القوانين المنشورة مع إمكانية البحث
+     */
     public function index(Request $request)
     {
         $query = Law::where('status', 'published');
@@ -36,7 +39,9 @@ class LawyerLawController extends Controller
         return response()->json($laws);
     }
 
-    // View a specific published law
+    /**
+     * عرض تفاصيل قانون محدد
+     */
     public function show($id)
     {
         $law = Law::where('id', $id)
@@ -66,3 +71,4 @@ class LawyerLawController extends Controller
         return response()->json($categories);
     }
 }
+

@@ -18,6 +18,7 @@ class Consultation extends Model
         'description',
         'priority',
         'preferred_channel',
+        'meeting_link',
         'status',
         'rejection_reason',
         'legal_summary',
