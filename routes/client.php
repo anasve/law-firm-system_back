@@ -7,6 +7,7 @@ use App\Http\Controllers\API\Client\ClientProfileController;
 use App\Http\Controllers\API\Client\ConsultationController;
 use App\Http\Controllers\API\Client\AppointmentController;
 use App\Http\Controllers\API\Client\ClientLawController;
+use App\Http\Controllers\API\Client\ClientFixedPriceController;
 use App\Http\Controllers\API\Client\NotificationController;
 
 // -----------------
@@ -51,6 +52,9 @@ Route::middleware('auth:client')->group(function () {
     Route::get('laws', [ClientLawController::class, 'index']);
     Route::get('laws/categories', [ClientLawController::class, 'categories']);
     Route::get('laws/{id}', [ClientLawController::class, 'show']);
+
+    // Fixed Prices routes
+    Route::get('fixed-prices', [ClientFixedPriceController::class, 'index']);
 
     // Notifications routes
     Route::get('notifications', [NotificationController::class, 'index']);

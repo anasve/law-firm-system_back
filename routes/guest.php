@@ -7,6 +7,7 @@ use App\Http\Controllers\API\Guest\LawController;
 use App\Http\Controllers\API\Guest\LawyerController;
 use App\Http\Controllers\API\Guest\SpecializationController;
 use App\Http\Controllers\API\Guest\GuestAuthController;
+use App\Http\Controllers\API\Guest\JobApplicationController;
 
 // -----------------
 // Authentication routes (Public)
@@ -53,3 +54,6 @@ Route::get('/lawyers/{id}', [LawyerController::class, 'show']);
 // Guest-accessible public specialization routes
 Route::get('/specializations', [SpecializationController::class, 'index']);
 Route::get('/specializations/{id}', [SpecializationController::class, 'show']);
+
+// Job Application routes
+Route::post('/job-applications', [JobApplicationController::class, 'store']);

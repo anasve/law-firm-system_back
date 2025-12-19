@@ -8,6 +8,7 @@ use App\Http\Controllers\API\Admin\AdminAuthController;
 use App\Http\Controllers\API\Admin\AdminProfileController;
 use App\Http\Controllers\API\Admin\SpecializationController;
 use App\Http\Controllers\API\Admin\AdminConsultationController;
+use App\Http\Controllers\API\Admin\JobApplicationController;
 
 Route::post('/login', [AdminAuthController::class, 'login']);
 
@@ -53,5 +54,13 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('consultations', [AdminConsultationController::class, 'index']);
     Route::get('consultations/statistics', [AdminConsultationController::class, 'statistics']);
     Route::get('consultations/{id}', [AdminConsultationController::class, 'show']);
+
+    // Job Applications routes
+    Route::get('job-applications', [JobApplicationController::class, 'index']);
+    Route::get('job-applications/pending-count', [JobApplicationController::class, 'pendingCount']);
+    Route::get('job-applications/{id}', [JobApplicationController::class, 'show']);
+    Route::post('job-applications/{id}/approve', [JobApplicationController::class, 'approve']);
+    Route::post('job-applications/{id}/reject', [JobApplicationController::class, 'reject']);
+    Route::delete('job-applications/{id}', [JobApplicationController::class, 'destroy']);
 
 });

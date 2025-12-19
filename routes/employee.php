@@ -7,6 +7,7 @@ use App\Http\Controllers\API\Employee\EmployeeAvailabilityController;
 use App\Http\Controllers\API\Employee\EmployeeAvailabilityTemplateController;
 use App\Http\Controllers\API\Employee\EmployeeAppointmentController;
 use App\Http\Controllers\API\Employee\EmployeeConsultationController;
+use App\Http\Controllers\API\Employee\EmployeeFixedPriceController;
 use App\Http\Controllers\API\Employee\NotificationController;
 use Illuminate\Support\Facades\Route;
 
@@ -62,6 +63,17 @@ Route::middleware('auth:employee')->group(function () {
     Route::get('consultations/{id}', [EmployeeConsultationController::class, 'show']);
     Route::post('consultations/{id}/assign', [EmployeeConsultationController::class, 'assign']);
     Route::post('consultations/{id}/auto-assign', [EmployeeConsultationController::class, 'autoAssign']);
+
+    // Fixed Prices management routes (إدارة الأسعار الثابتة)
+    Route::get('fixed-prices', [EmployeeFixedPriceController::class, 'index']);
+    Route::get('fixed-prices/active', [EmployeeFixedPriceController::class, 'active']);
+    Route::get('fixed-prices/archived', [EmployeeFixedPriceController::class, 'archived']);
+    Route::get('fixed-prices/{id}', [EmployeeFixedPriceController::class, 'show']);
+    Route::post('fixed-prices', [EmployeeFixedPriceController::class, 'store']);
+    Route::put('fixed-prices/{id}', [EmployeeFixedPriceController::class, 'update']);
+    Route::delete('fixed-prices/{id}', [EmployeeFixedPriceController::class, 'destroy']);
+    Route::put('fixed-prices/{id}/restore', [EmployeeFixedPriceController::class, 'restore']);
+    Route::delete('fixed-prices/{id}/force', [EmployeeFixedPriceController::class, 'forceDelete']);
 
     // Notifications routes
     Route::get('notifications', [NotificationController::class, 'index']);
