@@ -1,0 +1,661 @@
+    @startuml System_Architecture
+
+    !define CONTROLLER_COLOR #E1F5FF
+    !define MODEL_COLOR #FFF4E1
+    !define AUTH_COLOR #E8F5E9
+    !define ADMIN_COLOR #F3E5F5
+    !define CLIENT_COLOR #E3F2FD
+    !define EMPLOYEE_COLOR #FFF3E0
+    !define LAWYER_COLOR #E0F2F1
+    !define GUEST_COLOR #FCE4EC
+
+    ' ============================================
+    ' ERD - Entity Relationship Diagram
+    ' ============================================
+
+    package "Models / Database Entities" MODEL_COLOR {
+        
+        ' User Models
+        class Admin {
+            +id: bigint
+            +name: string
+            +email: string
+            +password: string
+            +remember_token: string
+            +created_at: timestamp
+            +updated_at: timestamp
+            --
+            +jobApplications(): hasMany
+        }
+        
+        class Client {
+            +id: bigint
+            +name: string
+            +email: string
+            +password: string
+            +phone: string
+            +address: text
+            +photo: string
+            +status: enum
+            +email_verified_at: timestamp
+            +remember_token: string
+            +deleted_at: timestamp
+            +created_at: timestamp
+            +updated_at: timestamp
+            --
+            +consultations(): hasMany
+            +appointments(): hasMany
+            +reviews(): hasMany
+            +getPhotoUrlAttribute(): string
+        }
+        
+        class Lawyer {
+            +id: bigint
+            +name: string
+            +email: string
+            +age: integer
+            +password: string
+            +phone: string
+            +address: text
+            +photo: string
+            +certificate: string
+            +specialization_id: bigint
+            +remember_token: string
+            +deleted_at: timestamp
+            +created_at: timestamp
+            +updated_at: timestamp
+            --
+            +specializations(): belongsToMany
+            +consultations(): hasMany
+            +appointments(): hasMany
+            +availabilities(): hasMany
+            +templates(): hasMany
+        }
+        
+        class Employee {
+            +id: bigint
+            +name: string
+            +email: string
+            +password: string
+            +age: integer
+            +phone: string
+            +address: text
+            +photo: string
+            +remember_token: string
+            +deleted_at: timestamp
+            +created_at: timestamp
+            +updated_at: timestamp
+        }
+        
+        ' Core Business Models
+        class Specialization {
+            +id: bigint
+            +name: string
+            +description: text
+            +deleted_at: timestamp
+            +created_at: timestamp
+            +updated_at: timestamp
+            --
+            +lawyers(): belongsToMany
+            +consultations(): hasMany
+            +jobApplications(): hasMany
+        }
+        
+        class Consultation {
+            +id: bigint
+            +client_id: bigint
+            +lawyer_id: bigint
+            +specialization_id: bigint
+            +subject: string
+            +description: text
+            +priority: enum
+            +preferred_channel: enum
+            +meeting_link: string
+            +status: enum
+            +rejection_reason: text
+            +legal_summary: text
+            +deleted_at: timestamp
+            +created_at: timestamp
+            +updated_at: timestamp
+            --
+            +client(): belongsTo
+            +lawyer(): belongsTo
+            +specialization(): belongsTo
+            +attachments(): hasMany
+            +messages(): hasMany
+            +appointments(): hasMany
+            +review(): hasOne
+        }
+        
+        class Appointment {
+            +id: bigint
+            +consultation_id: bigint
+            +availability_id: bigint
+            +lawyer_id: bigint
+            +client_id: bigint
+            +subject: string
+            +description: text
+            +datetime: datetime
+            +type: enum
+            +notes: text
+            +status: enum
+            +cancellation_reason: text
+            +cancelled_by: enum
+            +deleted_at: timestamp
+            +created_at: timestamp
+            +updated_at: timestamp
+            --
+            +consultation(): belongsTo
+            +lawyer(): belongsTo
+            +client(): belongsTo
+            +availability(): belongsTo
+            +checkAndMarkAsDone(): bool
+            +markCompletedAppointments(): int
+        }
+        
+        class LawyerAvailability {
+            +id: bigint
+            +lawyer_id: bigint
+            +date: date
+            +start_time: time
+            +end_time: time
+            +status: enum
+            +notes: text
+            +is_vacation: boolean
+            +vacation_reason: text
+            +created_at: timestamp
+            +updated_at: timestamp
+            --
+            +lawyer(): belongsTo
+            +appointments(): hasMany
+        }
+        
+        class AvailabilityTemplate {
+            +id: bigint
+            +lawyer_id: bigint
+            +name: string
+            +start_time: time
+            +end_time: time
+            +days_of_week: json
+            +start_date: date
+            +end_date: date
+            +is_active: boolean
+            +created_at: timestamp
+            +updated_at: timestamp
+            --
+            +lawyer(): belongsTo
+        }
+        
+        ' Consultation Related Models
+        class ConsultationMessage {
+            +id: bigint
+            +consultation_id: bigint
+            +sender_type: string
+            +sender_id: bigint
+            +message: text
+            +attachment_path: string
+            +is_read: boolean
+            +read_at: timestamp
+            +created_at: timestamp
+            +updated_at: timestamp
+            --
+            +consultation(): belongsTo
+            +sender(): morphTo
+        }
+        
+        class ConsultationAttachment {
+            +id: bigint
+            +consultation_id: bigint
+            +file_path: string
+            +file_name: string
+            +file_type: string
+            +file_size: integer
+            +created_at: timestamp
+            +updated_at: timestamp
+            --
+            +consultation(): belongsTo
+        }
+        
+        class ConsultationReview {
+            +id: bigint
+            +consultation_id: bigint
+            +client_id: bigint
+            +rating: integer
+            +comment: text
+            +created_at: timestamp
+            +updated_at: timestamp
+            --
+            +consultation(): belongsTo
+            +client(): belongsTo
+        }
+        
+        ' Other Models
+        class Law {
+            +id: bigint
+            +title: string
+            +category: string
+            +summary: text
+            +full_content: text
+            +status: enum
+            +deleted_at: timestamp
+            +created_at: timestamp
+            +updated_at: timestamp
+        }
+        
+        class FixedPrice {
+            +id: bigint
+            +name: string
+            +name_ar: string
+            +type: string
+            +price: decimal
+            +unit: string
+            +description: text
+            +is_active: boolean
+            +deleted_at: timestamp
+            +created_at: timestamp
+            +updated_at: timestamp
+            --
+            +scopeActive(): query
+            +scopeOfType(): query
+        }
+        
+        class JobApplication {
+            +id: bigint
+            +type: enum
+            +status: enum
+            +name: string
+            +email: string
+            +phone: string
+            +age: integer
+            +address: text
+            +photo: string
+            +specialization_id: bigint
+            +experience_years: integer
+            +bio: text
+            +certificate: string
+            +admin_notes: text
+            +reviewed_at: timestamp
+            +reviewed_by: bigint
+            +deleted_at: timestamp
+            +created_at: timestamp
+            +updated_at: timestamp
+            --
+            +reviewer(): belongsTo
+            +specialization(): belongsTo
+            +getPhotoUrlAttribute(): string
+            +getCertificateUrlAttribute(): string
+        }
+    }
+
+    ' Relationships
+    Admin ||--o{ JobApplication : "reviews"
+    Client ||--o{ Consultation : "creates"
+    Client ||--o{ Appointment : "books"
+    Client ||--o{ ConsultationReview : "writes"
+    Lawyer ||--o{ Consultation : "handles"
+    Lawyer ||--o{ Appointment : "has"
+    Lawyer ||--o{ LawyerAvailability : "sets"
+    Lawyer ||--o{ AvailabilityTemplate : "creates"
+    Lawyer }o--o{ Specialization : "has"
+    Specialization ||--o{ Consultation : "categorizes"
+    Specialization ||--o{ JobApplication : "for"
+    Consultation ||--o{ ConsultationMessage : "contains"
+    Consultation ||--o{ ConsultationAttachment : "has"
+    Consultation ||--o{ Appointment : "generates"
+    Consultation ||--|| ConsultationReview : "has"
+    Appointment }o--|| LawyerAvailability : "uses"
+    Appointment }o--|| Consultation : "belongs to"
+
+    ' ============================================
+    ' Controllers Class Diagram
+    ' ============================================
+
+    package "Controllers - Admin" ADMIN_COLOR {
+        class AdminAuthController {
+            +login()
+            +logout()
+        }
+        
+        class AdminProfileController {
+            +show()
+            +update()
+        }
+        
+        class LawyerController {
+            +index()
+            +show()
+            +store()
+            +update()
+            +destroy()
+            +archived()
+            +restore()
+            +forceDelete()
+            +total()
+        }
+        
+        class EmployeeController {
+            +index()
+            +show()
+            +store()
+            +update()
+            +destroy()
+            +archived()
+            +restore()
+            +forceDelete()
+            +total()
+        }
+        
+        class LawController {
+            +index()
+            +show()
+            +store()
+            +update()
+            +destroy()
+            +published()
+            +draft()
+            +archived()
+            +toggleStatus()
+            +restore()
+            +forceDelete()
+        }
+        
+        class SpecializationController {
+            +index()
+            +show()
+            +store()
+            +update()
+            +destroy()
+            +archived()
+            +restore()
+            +forceDelete()
+        }
+        
+        class AdminConsultationController {
+            +index()
+            +show()
+            +statistics()
+        }
+        
+        class JobApplicationController {
+            +index()
+            +show()
+            +approve()
+            +reject()
+            +destroy()
+            +pendingCount()
+        }
+    }
+
+    package "Controllers - Client" CLIENT_COLOR {
+        class ClientAuthController {
+            +register()
+            +login()
+            +logout()
+        }
+        
+        class ClientProfileController {
+            +show()
+            +update()
+        }
+        
+        class ConsultationController {
+            +index()
+            +show()
+            +store()
+            +update()
+            +destroy()
+            +cancel()
+            +complete()
+            +sendMessage()
+            +getMessages()
+            +createReview()
+        }
+        
+        class AppointmentController {
+            +getAvailableSlots()
+            +myAppointments()
+            +calendarMonth()
+            +bookAppointment()
+            +bookDirectAppointment()
+            +show()
+            +cancel()
+            +reschedule()
+        }
+        
+        class ClientLawController {
+            +index()
+            +show()
+            +categories()
+        }
+        
+        class ClientFixedPriceController {
+            +index()
+        }
+        
+        class NotificationController {
+            +index()
+            +unread()
+            +unreadCount()
+            +markAsRead()
+            +markAllAsRead()
+            +destroy()
+            +destroyAll()
+        }
+    }
+
+    package "Controllers - Employee" EMPLOYEE_COLOR {
+        class EmployeeAuthController {
+            +login()
+            +logout()
+        }
+        
+        class EmployeeProfileController {
+            +show()
+            +update()
+        }
+        
+        class ClientManagementController {
+            +index()
+            +show()
+            +update()
+            +destroy()
+            +pendingVerified()
+            +rejected()
+            +archived()
+            +approved()
+            +suspended()
+            +activate()
+            +reject()
+            +suspend()
+            +restore()
+            +forceDelete()
+        }
+        
+        class EmployeeAvailabilityController {
+            +index()
+            +show()
+            +store()
+            +update()
+            +destroy()
+            +storeBatch()
+            +createSchedule()
+        }
+        
+        class EmployeeAvailabilityTemplateController {
+            +index()
+            +show()
+            +store()
+            +update()
+            +destroy()
+            +apply()
+        }
+        
+        class EmployeeAppointmentController {
+            +index()
+            +show()
+            +customTimeRequests()
+            +calendarMonth()
+            +calendarWeek()
+            +calendarDay()
+            +accept()
+            +reject()
+        }
+        
+        class EmployeeConsultationController {
+            +index()
+            +show()
+            +pending()
+            +statistics()
+            +assign()
+            +autoAssign()
+        }
+        
+        class EmployeeFixedPriceController {
+            +index()
+            +active()
+            +archived()
+            +show()
+            +store()
+            +update()
+            +destroy()
+            +restore()
+            +forceDelete()
+        }
+        
+        class NotificationController {
+            +index()
+            +unread()
+            +unreadCount()
+            +markAsRead()
+            +markAllAsRead()
+            +destroy()
+        }
+    }
+
+    package "Controllers - Lawyer" LAWYER_COLOR {
+        class LawyerAuthController {
+            +login()
+            +logout()
+        }
+        
+        class LawyerProfileController {
+            +show()
+            +update()
+        }
+        
+        class LawyerConsultationController {
+            +index()
+            +show()
+            +accept()
+            +reject()
+            +createAppointment()
+            +sendMessage()
+            +getMessages()
+            +addLegalSummary()
+        }
+        
+        class LawyerAppointmentController {
+            +index()
+            +show()
+            +calendarMonth()
+            +calendarWeek()
+            +calendarDay()
+            +cancel()
+        }
+        
+        class LawyerAvailabilityController {
+            +index()
+            +show()
+            +store()
+            +update()
+            +destroy()
+            +setVacation()
+        }
+        
+        class LawyerLawController {
+            +index()
+            +show()
+            +categories()
+        }
+        
+        class NotificationController {
+            +index()
+            +unread()
+            +unreadCount()
+            +markAsRead()
+            +markAllAsRead()
+            +destroy()
+        }
+    }
+
+    package "Controllers - Guest" GUEST_COLOR {
+        class GuestAuthController {
+            +register()
+            +login()
+            +verifyEmail()
+        }
+        
+        class LawyerController {
+            +index()
+            +show()
+        }
+        
+        class SpecializationController {
+            +index()
+            +show()
+        }
+        
+        class LawController {
+            +index()
+            +show()
+        }
+        
+        class JobApplicationController {
+            +store()
+        }
+    }
+
+    ' Controller to Model Relationships
+    ClientAuthController ..> Client : uses
+    ClientProfileController ..> Client : uses
+    ConsultationController ..> Consultation : uses
+    ConsultationController ..> ConsultationMessage : uses
+    ConsultationController ..> ConsultationReview : uses
+    AppointmentController ..> Appointment : uses
+    AppointmentController ..> LawyerAvailability : uses
+    ClientLawController ..> Law : uses
+    ClientFixedPriceController ..> FixedPrice : uses
+
+    EmployeeAuthController ..> Employee : uses
+    EmployeeProfileController ..> Employee : uses
+    ClientManagementController ..> Client : uses
+    EmployeeAvailabilityController ..> LawyerAvailability : uses
+    EmployeeAvailabilityTemplateController ..> AvailabilityTemplate : uses
+    EmployeeAppointmentController ..> Appointment : uses
+    EmployeeConsultationController ..> Consultation : uses
+    EmployeeFixedPriceController ..> FixedPrice : uses
+
+    LawyerAuthController ..> Lawyer : uses
+    LawyerProfileController ..> Lawyer : uses
+    LawyerConsultationController ..> Consultation : uses
+    LawyerConsultationController ..> Appointment : uses
+    LawyerAppointmentController ..> Appointment : uses
+    LawyerAvailabilityController ..> LawyerAvailability : uses
+    LawyerLawController ..> Law : uses
+
+    AdminAuthController ..> Admin : uses
+    AdminProfileController ..> Admin : uses
+    LawyerController ..> Lawyer : uses
+    EmployeeController ..> Employee : uses
+    LawController ..> Law : uses
+    SpecializationController ..> Specialization : uses
+    AdminConsultationController ..> Consultation : uses
+    JobApplicationController ..> JobApplication : uses
+
+    GuestAuthController ..> Client : uses
+    GuestJobApplicationController ..> JobApplication : uses
+
+    @enduml
+
+
+

@@ -1,0 +1,206 @@
+@startuml System_Black_Box_Detailed
+
+!define SYSTEM_COLOR #E3F2FD
+!define CLIENT_COLOR #C8E6C9
+!define LAWYER_COLOR #B2DFDB
+!define EMPLOYEE_COLOR #FFE0B2
+!define ADMIN_COLOR #E1BEE7
+!define GUEST_COLOR #F8BBD0
+
+skinparam componentStyle rectangle
+skinparam defaultFontSize 11
+skinparam defaultFontName Arial
+
+title Law Firm Management System - Detailed Black Box\nنظام إدارة مكتب المحاماة - مخطط الصندوق الأسود التفصيلي
+
+package "External Actors / الجهات الخارجية" {
+    
+    actor "Client\nالعميل" as Client CLIENT_COLOR
+    actor "Lawyer\nالمحامي" as Lawyer LAWYER_COLOR
+    actor "Employee\nالموظف" as Employee EMPLOYEE_COLOR
+    actor "Admin\nالمدير" as Admin ADMIN_COLOR
+    actor "Guest\nزائر" as Guest GUEST_COLOR
+}
+
+package "Law Firm Management System\nنظام إدارة مكتب المحاماة" SYSTEM_COLOR {
+    
+    ' Input/Output Interfaces
+    interface "Client Input\nمدخلات العميل" as ClientInput CLIENT_COLOR
+    interface "Client Output\nمخرجات العميل" as ClientOutput CLIENT_COLOR
+    
+    interface "Lawyer Input\nمدخلات المحامي" as LawyerInput LAWYER_COLOR
+    interface "Lawyer Output\nمخرجات المحامي" as LawyerOutput LAWYER_COLOR
+    
+    interface "Employee Input\nمدخلات الموظف" as EmployeeInput EMPLOYEE_COLOR
+    interface "Employee Output\nمخرجات الموظف" as EmployeeOutput EMPLOYEE_COLOR
+    
+    interface "Admin Input\nمدخلات المدير" as AdminInput ADMIN_COLOR
+    interface "Admin Output\nمخرجات المدير" as AdminOutput ADMIN_COLOR
+    
+    interface "Guest Input\nمدخلات الزائر" as GuestInput GUEST_COLOR
+    interface "Guest Output\nمخرجات الزائر" as GuestOutput GUEST_COLOR
+    
+    ' System Core
+    component "System Core\nالنواة الأساسية" {
+        component "Authentication Module\nوحدة المصادقة" as AuthModule
+        component "Authorization Module\nوحدة التفويض" as AuthzModule
+        component "Business Logic\nالمنطق التجاري" as BusinessLogic
+        component "Data Access Layer\nطبقة الوصول للبيانات" as DataAccess
+        component "File Management\nإدارة الملفات" as FileManager
+        component "Notification Engine\nمحرك الإشعارات" as NotificationEngine
+    }
+    
+    database "Database\nقاعدة البيانات" as DB {
+        component "Users Data\nبيانات المستخدمين" as UsersDB
+        component "Business Data\nالبيانات التجارية" as BusinessDB
+        component "Configuration Data\nبيانات الإعدادات" as ConfigDB
+    }
+    
+    storage "File Storage\nتخزين الملفات" as Storage {
+        component "User Files\nملفات المستخدمين" as UserFiles
+        component "Document Files\nملفات المستندات" as DocFiles
+    }
+}
+
+' Client Flow
+Client --> ClientInput : "1. Register/Login\nالتسجيل/الدخول"
+Client --> ClientInput : "2. Create Consultation\nإنشاء استشارة"
+Client --> ClientInput : "3. Book Appointment\nحجز موعد"
+Client --> ClientInput : "4. View Laws\nعرض القوانين"
+Client --> ClientInput : "5. View Prices\nعرض الأسعار"
+Client --> ClientInput : "6. Manage Profile\nإدارة الملف الشخصي"
+
+ClientInput --> AuthModule : "Authenticate\nالمصادقة"
+AuthModule --> AuthzModule : "Check Permissions\nالتحقق من الصلاحيات"
+AuthzModule --> BusinessLogic : "Process Request\nمعالجة الطلب"
+BusinessLogic --> DataAccess : "Query/Update Data\nالاستعلام/تحديث البيانات"
+DataAccess --> DB : "SQL Operations\nعمليات SQL"
+BusinessLogic --> FileManager : "Handle Files\nمعالجة الملفات"
+FileManager --> Storage : "Store/Retrieve\nالتخزين/الاسترجاع"
+BusinessLogic --> NotificationEngine : "Send Notifications\nإرسال الإشعارات"
+
+BusinessLogic --> ClientOutput : "Response Data\nبيانات الاستجابة"
+ClientOutput --> Client : "JSON Response\nاستجابة JSON"
+
+' Lawyer Flow
+Lawyer --> LawyerInput : "1. Login\nالدخول"
+Lawyer --> LawyerInput : "2. Manage Consultations\nإدارة الاستشارات"
+Lawyer --> LawyerInput : "3. Set Availability\nتعيين التوفر"
+Lawyer --> LawyerInput : "4. Manage Appointments\nإدارة المواعيد"
+Lawyer --> LawyerInput : "5. View Laws\nعرض القوانين"
+
+LawyerInput --> AuthModule
+AuthModule --> AuthzModule
+AuthzModule --> BusinessLogic
+BusinessLogic --> DataAccess
+DataAccess --> DB
+BusinessLogic --> FileManager
+FileManager --> Storage
+BusinessLogic --> NotificationEngine
+
+BusinessLogic --> LawyerOutput
+LawyerOutput --> Lawyer
+
+' Employee Flow
+Employee --> EmployeeInput : "1. Login\nالدخول"
+Employee --> EmployeeInput : "2. Manage Clients\nإدارة العملاء"
+Employee --> EmployeeInput : "3. Assign Consultations\nتعيين الاستشارات"
+Employee --> EmployeeInput : "4. Manage Appointments\nإدارة المواعيد"
+Employee --> EmployeeInput : "5. Manage Fixed Prices\nإدارة الأسعار الثابتة"
+Employee --> EmployeeInput : "6. Manage Availability\nإدارة التوفر"
+
+EmployeeInput --> AuthModule
+AuthModule --> AuthzModule
+AuthzModule --> BusinessLogic
+BusinessLogic --> DataAccess
+DataAccess --> DB
+BusinessLogic --> FileManager
+FileManager --> Storage
+BusinessLogic --> NotificationEngine
+
+BusinessLogic --> EmployeeOutput
+EmployeeOutput --> Employee
+
+' Admin Flow
+Admin --> AdminInput : "1. Login\nالدخول"
+Admin --> AdminInput : "2. Manage Lawyers\nإدارة المحامين"
+Admin --> AdminInput : "3. Manage Employees\nإدارة الموظفين"
+Admin --> AdminInput : "4. Manage Laws\nإدارة القوانين"
+Admin --> AdminInput : "5. Manage Specializations\nإدارة التخصصات"
+Admin --> AdminInput : "6. Review Job Applications\nمراجعة طلبات التوظيف"
+
+AdminInput --> AuthModule
+AuthModule --> AuthzModule
+AuthzModule --> BusinessLogic
+BusinessLogic --> DataAccess
+DataAccess --> DB
+BusinessLogic --> FileManager
+FileManager --> Storage
+BusinessLogic --> NotificationEngine
+
+BusinessLogic --> AdminOutput
+AdminOutput --> Admin
+
+' Guest Flow
+Guest --> GuestInput : "1. Register\nالتسجيل"
+Guest --> GuestInput : "2. View Public Info\nعرض المعلومات العامة"
+Guest --> GuestInput : "3. Submit Job Application\nتقديم طلب توظيف"
+
+GuestInput --> BusinessLogic
+BusinessLogic --> DataAccess
+DataAccess --> DB
+BusinessLogic --> FileManager
+FileManager --> Storage
+
+BusinessLogic --> GuestOutput
+GuestOutput --> Guest
+
+' System Internal Flow
+AuthModule --> UsersDB : "Verify User\nالتحقق من المستخدم"
+AuthzModule --> ConfigDB : "Load Permissions\nتحميل الصلاحيات"
+DataAccess --> BusinessDB : "Business Operations\nالعمليات التجارية"
+NotificationEngine --> UsersDB : "Get User Contacts\nالحصول على جهات اتصال المستخدم"
+
+legend right
+    |<#CLIENT_COLOR> Client Operations | عمليات العميل |
+    |<#LAWYER_COLOR> Lawyer Operations | عمليات المحامي |
+    |<#EMPLOYEE_COLOR> Employee Operations | عمليات الموظف |
+    |<#ADMIN_COLOR> Admin Operations | عمليات المدير |
+    |<#GUEST_COLOR> Guest Operations | عمليات الزائر |
+    
+    **Flow Direction:**
+    --> Request/Input
+    --> Response/Output
+    --> Internal Processing
+endlegend
+
+note right of BusinessLogic
+    **Core Business Logic:**
+    - Consultation Management
+    - Appointment Scheduling
+    - Availability Management
+    - Client Management
+    - Lawyer Management
+    - Law Management
+    - Fixed Price Management
+    - Job Application Processing
+    - Notification Management
+end note
+
+note right of DB
+    **Database Tables:**
+    - clients, lawyers, employees, admins
+    - consultations, appointments
+    - lawyer_availability, availability_templates
+    - laws, specializations
+    - fixed_prices
+    - job_applications
+    - consultation_messages, consultation_attachments
+    - consultation_reviews
+    - notifications
+end note
+
+@enduml
+
+
+
