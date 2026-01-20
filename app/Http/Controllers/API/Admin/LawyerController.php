@@ -38,8 +38,10 @@ class LawyerController extends Controller
                 'age'             => $lawyer->age,
                 'phone'           => $lawyer->phone,
                 'address'         => $lawyer->address,
-                'photo'           => $lawyer->photo,
-                'certificate'     => $lawyer->certificate,
+                'photo'           => $lawyer->photo ? asset('storage/' . $lawyer->photo) : null,
+                'photo_path'      => $lawyer->photo,
+                'certificate'     => $lawyer->certificate ? asset('storage/' . $lawyer->certificate) : null,
+                'certificate_path' => $lawyer->certificate,
                 'specializations' => $lawyer->specializations->pluck('name'),
                 'created_at'      => $lawyer->created_at,
             ];
@@ -59,8 +61,10 @@ class LawyerController extends Controller
             'age'             => $lawyer->age,
             'phone'           => $lawyer->phone,
             'address'         => $lawyer->address,
-            'photo'           => $lawyer->photo,
-            'certificate'     => $lawyer->certificate,
+            'photo'           => $lawyer->photo ? asset('storage/' . $lawyer->photo) : null,
+            'photo_path'      => $lawyer->photo,
+            'certificate'     => $lawyer->certificate ? asset('storage/' . $lawyer->certificate) : null,
+            'certificate_path' => $lawyer->certificate,
             'specializations' => $lawyer->specializations->pluck('name'),
             'created_at'      => $lawyer->created_at,
         ]);
@@ -71,7 +75,7 @@ class LawyerController extends Controller
         $data = $request->validated();
 
         if ($request->hasFile('photo')) {
-            $data['photo'] = $request->file('photo')->store('photos', 'public');
+            $data['photo'] = $request->file('photo')->store('lawyers/photos', 'public');
         }
 
         if ($request->hasFile('certificate')) {
@@ -97,8 +101,10 @@ class LawyerController extends Controller
                 'age'             => $lawyer->age,
                 'phone'           => $lawyer->phone,
                 'address'         => $lawyer->address,
-                'photo'           => $lawyer->photo,
-                'certificate'     => $lawyer->certificate,
+                'photo'           => $lawyer->photo ? asset('storage/' . $lawyer->photo) : null,
+                'photo_path'      => $lawyer->photo,
+                'certificate'     => $lawyer->certificate ? asset('storage/' . $lawyer->certificate) : null,
+                'certificate_path' => $lawyer->certificate,
                 'specializations' => $lawyer->specializations->pluck('name'),
                 'created_at'      => $lawyer->created_at,
             ],
@@ -147,8 +153,10 @@ class LawyerController extends Controller
                 'age'             => $lawyer->age,
                 'phone'           => $lawyer->phone,
                 'address'         => $lawyer->address,
-                'photo'           => $lawyer->photo,
-                'certificate'     => $lawyer->certificate,
+                'photo'           => $lawyer->photo ? asset('storage/' . $lawyer->photo) : null,
+                'photo_path'      => $lawyer->photo,
+                'certificate'     => $lawyer->certificate ? asset('storage/' . $lawyer->certificate) : null,
+                'certificate_path' => $lawyer->certificate,
                 'specializations' => $lawyer->specializations->pluck('name'),
             ],
         ]);
@@ -172,8 +180,10 @@ class LawyerController extends Controller
                 'age'             => $lawyer->age,
                 'phone'           => $lawyer->phone,
                 'address'         => $lawyer->address,
-                'photo'           => $lawyer->photo,
-                'certificate'     => $lawyer->certificate,
+                'photo'           => $lawyer->photo ? asset('storage/' . $lawyer->photo) : null,
+                'photo_path'      => $lawyer->photo,
+                'certificate'     => $lawyer->certificate ? asset('storage/' . $lawyer->certificate) : null,
+                'certificate_path' => $lawyer->certificate,
                 'specializations' => $lawyer->specializations->pluck('name'),
                 'deleted_at'      => $lawyer->deleted_at,
             ];

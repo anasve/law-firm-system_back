@@ -6,7 +6,6 @@ use App\Models\Employee;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Validation\ValidationException;
 use App\Http\Requests\Client\ClientLoginRequest;
 use App\Http\Requests\Client\ClientRegisterRequest;
@@ -31,9 +30,8 @@ class GuestAuthController extends Controller
             'address'  => $data['address'] ?? null,
             'photo'    => $data['photo'] ?? null,
             'status'   => 'pending',
+            'email_verified_at' => now(), // تحقق تلقائي من البريد
         ]);
-
-        event(new Registered($client)); // Laravel will send email verification
 
         $employees = Employee::all();
         foreach ($employees as $employee) {
@@ -41,7 +39,7 @@ class GuestAuthController extends Controller
         }
 
         return response()->json([
-            'message' => 'Registered successfully. Check your email for verification.',
+            'message' => 'Registered successfully. Your account is pending approval.',
         ], 201);
 
     }
@@ -54,10 +52,6 @@ class GuestAuthController extends Controller
             throw ValidationException::withMessages([
                 'email' => ['The credentials are incorrect.'],
             ]);
-        }
-
-        if (! $client->hasVerifiedEmail()) {
-            return response()->json(['message' => 'Please verify your email address.'], 403);
         }
 
         if ($client->status !== 'active') {

@@ -12,7 +12,11 @@ class SpecializationController extends Controller
 {
     public function index()
     {
-        return response()->json(Specialization::all());
+        // Get all non-deleted specializations
+        $specializations = Specialization::orderBy('created_at', 'desc')->get();
+        
+        // Return as direct array (not wrapped in 'data' key)
+        return response()->json($specializations);
     }
 
     // Create a new specialization

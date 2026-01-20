@@ -12,7 +12,16 @@ class ClientProfileController extends Controller
 {
     public function show()
     {
-        return response()->json(auth('client')->user());
+        $client = auth('client')->user();
+        $clientArray = $client->toArray();
+        
+        if ($client->photo) {
+            $clientArray['image'] = asset('storage/' . $client->photo);
+            $clientArray['photo'] = asset('storage/' . $client->photo);
+            $clientArray['photo_path'] = $client->photo;
+        }
+        
+        return response()->json($clientArray);
     }
 
     // Update client profile
@@ -36,7 +45,15 @@ class ClientProfileController extends Controller
         }
 
         $client->update($data);
+        $client->refresh();
+        $clientArray = $client->toArray();
+        
+        if ($client->photo) {
+            $clientArray['image'] = asset('storage/' . $client->photo);
+            $clientArray['photo'] = asset('storage/' . $client->photo);
+            $clientArray['photo_path'] = $client->photo;
+        }
 
-        return response()->json($client);
+        return response()->json($clientArray);
     }
 }

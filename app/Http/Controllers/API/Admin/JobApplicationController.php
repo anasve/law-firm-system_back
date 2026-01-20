@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\JobApplication;
 use App\Models\Lawyer;
 use App\Models\Employee;
+use App\Notifications\JobApplication\JobApplicationApprovedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class JobApplicationController extends Controller
 {
@@ -90,37 +92,45 @@ class JobApplicationController extends Controller
             ], 400);
         }
 
-        // Check if email already exists in the target table
-        if ($application->type === 'lawyer') {
-            if (Lawyer::where('email', $application->email)->exists()) {
-                return response()->json([
-                    'message' => 'البريد الإلكتروني مستخدم بالفعل في جدول المحامين',
-                ], 422);
-            }
-        } else {
-            if (Employee::where('email', $application->email)->exists()) {
-                return response()->json([
-                    'message' => 'البريد الإلكتروني مستخدم بالفعل في جدول الموظفين',
-                ], 422);
+        // Check if email already exists in the target table (if email provided)
+        if ($application->email) {
+            if ($application->type === 'lawyer') {
+                if (Lawyer::where('email', $application->email)->exists()) {
+                    return response()->json([
+                        'message' => 'البريد الإلكتروني مستخدم بالفعل في جدول المحامين',
+                    ], 422);
+                }
+            } else {
+                if (Employee::where('email', $application->email)->exists()) {
+                    return response()->json([
+                        'message' => 'البريد الإلكتروني مستخدم بالفعل في جدول الموظفين',
+                    ], 422);
+                }
             }
         }
 
         DB::beginTransaction();
         try {
+            // Generate email if not provided
+            $email = $application->email;
+            if (!$email) {
+                // Generate email from name + timestamp
+                $email = strtolower(str_replace(' ', '.', $application->name)) . '.' . time() . '@lawfirm.local';
+            }
+
             if ($application->type === 'lawyer') {
                 // Generate a random password
                 $password = \Illuminate\Support\Str::random(12);
                 
                 $user = Lawyer::create([
                     'name' => $application->name,
-                    'email' => $application->email,
+                    'email' => $email,
                     'password' => Hash::make($password),
                     'age' => $application->age,
                     'phone' => $application->phone,
                     'address' => $application->address,
                     'photo' => $application->photo,
                     'certificate' => $application->certificate,
-                    'specialization_id' => $application->specialization_id,
                 ]);
 
                 // Attach specialization (many-to-many relationship)
@@ -133,7 +143,7 @@ class JobApplicationController extends Controller
                 
                 $user = Employee::create([
                     'name' => $application->name,
-                    'email' => $application->email,
+                    'email' => $email,
                     'password' => Hash::make($password),
                     'age' => $application->age,
                     'phone' => $application->phone,
@@ -151,6 +161,22 @@ class JobApplicationController extends Controller
 
             DB::commit();
 
+            // Send email notification to the applicant (if email was provided)
+            if ($application->email) {
+                try {
+                    Notification::route('mail', $application->email)
+                        ->notify(new JobApplicationApprovedNotification(
+                            $application->type,
+                            $user->email,
+                            $password,
+                            $application->name
+                        ));
+                } catch (\Exception $e) {
+                    // Log error but don't fail the request
+                    \Log::error('Failed to send approval email: ' . $e->getMessage());
+                }
+            }
+
             return response()->json([
                 'message' => 'تم الموافقة على الطلب وإنشاء الحساب بنجاح',
                 'data' => [
@@ -163,9 +189,14 @@ class JobApplicationController extends Controller
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Job Application Approval Error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'application_id' => $id,
+            ]);
             return response()->json([
                 'message' => 'حدث خطأ أثناء معالجة الطلب',
                 'error' => $e->getMessage(),
+                'trace' => config('app.debug') ? $e->getTraceAsString() : null,
             ], 500);
         }
     }
@@ -197,18 +228,6 @@ class JobApplicationController extends Controller
                 'reviewed_at' => $application->reviewed_at,
             ],
         ], 200);
-    }
-
-    /**
-     * Get pending applications count
-     */
-    public function pendingCount()
-    {
-        $count = JobApplication::where('status', 'pending')->count();
-
-        return response()->json([
-            'count' => $count,
-        ]);
     }
 
     /**

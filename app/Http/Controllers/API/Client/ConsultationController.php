@@ -91,8 +91,17 @@ class ConsultationController extends Controller
         $consultation->load(['lawyer', 'specialization', 'attachments']);
 
         // إرسال إشعار للمحامي إذا تم تعيينه
-        if ($consultation->lawyer) {
+        if ($consultation->lawyer_id) {
             $consultation->lawyer->notify(new NewConsultationNotification($consultation));
+        } else if ($consultation->specialization_id) {
+            // إذا لم يتم تعيين محامي، أرسل إشعار لجميع المحامين المتخصصين في هذا التخصص
+            $lawyers = \App\Models\Lawyer::whereHas('specializations', function ($q) use ($consultation) {
+                $q->where('specializations.id', $consultation->specialization_id);
+            })->get();
+            
+            foreach ($lawyers as $lawyer) {
+                $lawyer->notify(new NewConsultationNotification($consultation));
+            }
         }
 
         return response()->json([

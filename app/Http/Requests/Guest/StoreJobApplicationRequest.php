@@ -23,7 +23,7 @@ class StoreJobApplicationRequest extends FormRequest
             // Common fields
             'type' => 'required|in:lawyer,employee',
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:job_applications,email',
+            'email' => 'nullable|email|unique:job_applications,email',
             'phone' => 'nullable|string|max:20',
             'age' => 'required|integer|min:18|max:100',
             'address' => 'nullable|string|max:500',
@@ -56,7 +56,6 @@ class StoreJobApplicationRequest extends FormRequest
             'type.required' => 'نوع الطلب مطلوب (lawyer أو employee)',
             'type.in' => 'نوع الطلب يجب أن يكون lawyer أو employee',
             'name.required' => 'الاسم مطلوب',
-            'email.required' => 'البريد الإلكتروني مطلوب',
             'email.email' => 'البريد الإلكتروني غير صحيح',
             'email.unique' => 'هذا البريد الإلكتروني مستخدم بالفعل',
             'age.required' => 'العمر مطلوب',

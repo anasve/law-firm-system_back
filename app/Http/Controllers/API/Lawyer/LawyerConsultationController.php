@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Lawyer\AcceptConsultationRequest;
 use App\Http\Requests\Lawyer\RejectConsultationRequest;
 use App\Http\Requests\Lawyer\SendMessageRequest;
-use App\Http\Requests\Lawyer\CreateAppointmentRequest;
 use App\Models\Consultation;
 use App\Models\ConsultationMessage;
 use App\Models\Appointment;
@@ -21,8 +20,25 @@ class LawyerConsultationController extends Controller
     // عرض جميع الاستشارات الواردة للمحامي
     public function index(Request $request)
     {
+        $lawyerId = Auth::id();
+        
+        // جلب تخصصات المحامي
+        $lawyer = \App\Models\Lawyer::with('specializations')->find($lawyerId);
+        $specializationIds = $lawyer ? $lawyer->specializations->pluck('id')->toArray() : [];
+
         $query = Consultation::with(['client', 'specialization'])
-            ->where('lawyer_id', Auth::id());
+            ->where(function ($q) use ($lawyerId, $specializationIds) {
+                // الاستشارات المعينة لهذا المحامي
+                $q->where('lawyer_id', $lawyerId)
+                  // أو الاستشارات غير المعينة التي تطابق تخصصاته
+                  ->orWhere(function ($subQ) use ($specializationIds) {
+                      $subQ->whereNull('lawyer_id')
+                           ->where('status', 'pending');
+                      if (!empty($specializationIds)) {
+                          $subQ->whereIn('specialization_id', $specializationIds);
+                      }
+                  });
+            });
 
         if ($status = $request->input('status')) {
             $query->where('status', $status);
@@ -36,9 +52,25 @@ class LawyerConsultationController extends Controller
     // عرض الاستشارات المعلقة (لم يتم قبولها أو رفضها بعد)
     public function pending()
     {
+        $lawyerId = Auth::id();
+        
+        // جلب تخصصات المحامي
+        $lawyer = \App\Models\Lawyer::with('specializations')->find($lawyerId);
+        $specializationIds = $lawyer ? $lawyer->specializations->pluck('id')->toArray() : [];
+
         $consultations = Consultation::with(['client', 'specialization'])
-            ->where('lawyer_id', Auth::id())
             ->where('status', 'pending')
+            ->where(function ($q) use ($lawyerId, $specializationIds) {
+                // الاستشارات المعينة لهذا المحامي
+                $q->where('lawyer_id', $lawyerId)
+                  // أو الاستشارات غير المعينة التي تطابق تخصصاته
+                  ->orWhere(function ($subQ) use ($specializationIds) {
+                      $subQ->whereNull('lawyer_id');
+                      if (!empty($specializationIds)) {
+                          $subQ->whereIn('specialization_id', $specializationIds);
+                      }
+                  });
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -48,6 +80,12 @@ class LawyerConsultationController extends Controller
     // عرض استشارة محددة
     public function show($id)
     {
+        $lawyerId = Auth::id();
+        
+        // جلب تخصصات المحامي
+        $lawyer = \App\Models\Lawyer::with('specializations')->find($lawyerId);
+        $specializationIds = $lawyer ? $lawyer->specializations->pluck('id')->toArray() : [];
+
         $consultation = Consultation::with([
             'client',
             'specialization',
@@ -57,7 +95,18 @@ class LawyerConsultationController extends Controller
             },
             'appointments',
             'review'
-        ])->where('lawyer_id', Auth::id())->findOrFail($id);
+        ])->where(function ($q) use ($lawyerId, $specializationIds) {
+            // الاستشارات المعينة لهذا المحامي
+            $q->where('lawyer_id', $lawyerId)
+              // أو الاستشارات غير المعينة التي تطابق تخصصاته
+              ->orWhere(function ($subQ) use ($specializationIds) {
+                  $subQ->whereNull('lawyer_id')
+                       ->where('status', 'pending');
+                  if (!empty($specializationIds)) {
+                      $subQ->whereIn('specialization_id', $specializationIds);
+                  }
+              });
+        })->findOrFail($id);
 
         return response()->json($consultation);
     }
@@ -65,9 +114,32 @@ class LawyerConsultationController extends Controller
     // قبول الاستشارة
     public function accept(AcceptConsultationRequest $request, $id)
     {
-        $consultation = Consultation::where('lawyer_id', Auth::id())
-            ->where('status', 'pending')
+        $lawyerId = Auth::id();
+        
+        // البحث عن الاستشارة: إما معينة لهذا المحامي أو غير معينة
+        $consultation = Consultation::where('status', 'pending')
+            ->where(function ($q) use ($lawyerId) {
+                $q->where('lawyer_id', $lawyerId)
+                  ->orWhereNull('lawyer_id');
+            })
             ->findOrFail($id);
+
+        // إذا كانت الاستشارة غير معينة، قم بتعيينها لهذا المحامي
+        if (!$consultation->lawyer_id) {
+            $lawyer = \App\Models\Lawyer::find($lawyerId);
+            $specializationIds = $lawyer ? $lawyer->specializations->pluck('id')->toArray() : [];
+            
+            // التحقق من أن المحامي متخصص في تخصص الاستشارة
+            if ($consultation->specialization_id && !empty($specializationIds)) {
+                if (!in_array($consultation->specialization_id, $specializationIds)) {
+                    return response()->json([
+                        'message' => 'أنت لست متخصصاً في هذا التخصص. لا يمكنك قبول هذه الاستشارة.',
+                    ], 403);
+                }
+            }
+            
+            $consultation->lawyer_id = $lawyerId;
+        }
 
         $consultation->status = 'accepted';
         $consultation->save();
@@ -84,9 +156,32 @@ class LawyerConsultationController extends Controller
     // رفض الاستشارة
     public function reject(RejectConsultationRequest $request, $id)
     {
-        $consultation = Consultation::where('lawyer_id', Auth::id())
-            ->where('status', 'pending')
+        $lawyerId = Auth::id();
+        
+        // البحث عن الاستشارة: إما معينة لهذا المحامي أو غير معينة
+        $consultation = Consultation::where('status', 'pending')
+            ->where(function ($q) use ($lawyerId) {
+                $q->where('lawyer_id', $lawyerId)
+                  ->orWhereNull('lawyer_id');
+            })
             ->findOrFail($id);
+
+        // إذا كانت الاستشارة غير معينة، قم بتعيينها لهذا المحامي أولاً (للتسجيل)
+        if (!$consultation->lawyer_id) {
+            $lawyer = \App\Models\Lawyer::find($lawyerId);
+            $specializationIds = $lawyer ? $lawyer->specializations->pluck('id')->toArray() : [];
+            
+            // التحقق من أن المحامي متخصص في تخصص الاستشارة
+            if ($consultation->specialization_id && !empty($specializationIds)) {
+                if (!in_array($consultation->specialization_id, $specializationIds)) {
+                    return response()->json([
+                        'message' => 'أنت لست متخصصاً في هذا التخصص. لا يمكنك رفض هذه الاستشارة.',
+                    ], 403);
+                }
+            }
+            
+            $consultation->lawyer_id = $lawyerId;
+        }
 
         $consultation->status = 'rejected';
         $consultation->rejection_reason = $request->rejection_reason;
@@ -145,32 +240,6 @@ class LawyerConsultationController extends Controller
             ->get();
 
         return response()->json($messages);
-    }
-
-    // إنشاء موعد
-    public function createAppointment(CreateAppointmentRequest $request, $consultationId)
-    {
-        $consultation = Consultation::where('lawyer_id', Auth::id())
-            ->where('status', 'accepted')
-            ->findOrFail($consultationId);
-
-        $appointment = Appointment::create([
-            'consultation_id' => $consultation->id,
-            'lawyer_id' => Auth::id(),
-            'client_id' => $consultation->client_id,
-            'datetime' => $request->datetime,
-            'type' => 'in_office',
-            'notes' => $request->notes,
-            'status' => 'pending',
-        ]);
-
-        // إرسال إشعار للعميل
-        // TODO: إضافة Notification
-
-        return response()->json([
-            'message' => 'تم إنشاء الموعد بنجاح',
-            'appointment' => $appointment,
-        ], 201);
     }
 
     // إنهاء الاستشارة

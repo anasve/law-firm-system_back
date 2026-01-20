@@ -23,8 +23,10 @@ class LawyerProfileController extends Controller
                 'phone'           => $lawyer->phone,
                 'address'         => $lawyer->address,
                 'specializations' => $lawyer->specializations()->pluck('name'), // return all specialization names
-                'photo'           => $lawyer->photo,
-                'certificate'     => $lawyer->certificate,
+                'photo'           => $lawyer->photo ? asset('storage/' . $lawyer->photo) : null,
+                'photo_path'      => $lawyer->photo,
+                'certificate'     => $lawyer->certificate ? asset('storage/' . $lawyer->certificate) : null,
+                'certificate_path' => $lawyer->certificate,
                 'created_at'      => $lawyer->created_at,
                 'updated_at'      => $lawyer->updated_at,
             ],
@@ -76,9 +78,22 @@ class LawyerProfileController extends Controller
             $lawyer->specializations()->sync($specializations);
         }
 
+        $lawyer = $lawyer->fresh()->load('specializations');
+        $lawyerArray = $lawyer->toArray();
+        
+        if ($lawyer->photo) {
+            $lawyerArray['photo'] = asset('storage/' . $lawyer->photo);
+            $lawyerArray['photo_path'] = $lawyer->photo;
+        }
+        
+        if ($lawyer->certificate) {
+            $lawyerArray['certificate'] = asset('storage/' . $lawyer->certificate);
+            $lawyerArray['certificate_path'] = $lawyer->certificate;
+        }
+
         return response()->json([
             'message' => 'Profile updated successfully',
-            'lawyer'  => $lawyer->fresh()->load('specializations'), // eager load specializations
+            'lawyer'  => $lawyerArray,
         ]);
     }
 }

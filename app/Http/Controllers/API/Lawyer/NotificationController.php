@@ -23,16 +23,6 @@ class NotificationController extends Controller
         return response()->json($notifications);
     }
 
-    // عرض الإشعارات غير المقروءة فقط
-    public function unread()
-    {
-        $notifications = Auth::user()->unreadNotifications()
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return response()->json($notifications);
-    }
-
     // عدد الإشعارات غير المقروءة
     public function unreadCount()
     {

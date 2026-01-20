@@ -8,6 +8,7 @@ use App\Notifications\Client\ClientRejectedNotification;
 use App\Notifications\Client\ClientSuspendedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
 
 class ClientManagementController extends Controller
 {
@@ -29,16 +30,36 @@ class ClientManagementController extends Controller
         }
 
         $clients = $query->orderBy('created_at', 'desc')->get();
+        
+        $clients = $clients->map(function ($client) {
+            $clientArray = $client->toArray();
+            if ($client->photo) {
+                $clientArray['image'] = asset('storage/' . $client->photo);
+                $clientArray['photo'] = asset('storage/' . $client->photo);
+                $clientArray['photo_path'] = $client->photo;
+            }
+            return $clientArray;
+        });
+        
         return response()->json($clients);
     }
 
-    // List email-verified clients who are still pending approval
+    // List clients who are still pending approval
     public function pendingVerified()
     {
-        $clients = Client::whereNotNull('email_verified_at')
-            ->where('status', 'pending')
+        $clients = Client::where('status', 'pending')
             ->orderBy('created_at', 'desc')
             ->get();
+        
+        $clients = $clients->map(function ($client) {
+            $clientArray = $client->toArray();
+            if ($client->photo) {
+                $clientArray['image'] = asset('storage/' . $client->photo);
+                $clientArray['photo'] = asset('storage/' . $client->photo);
+                $clientArray['photo_path'] = $client->photo;
+            }
+            return $clientArray;
+        });
 
         return response()->json($clients);
     }
@@ -48,6 +69,17 @@ class ClientManagementController extends Controller
         $clients = Client::where('status', 'active')
             ->orderBy('created_at', 'desc')
             ->get();
+        
+        $clients = $clients->map(function ($client) {
+            $clientArray = $client->toArray();
+            if ($client->photo) {
+                $clientArray['image'] = asset('storage/' . $client->photo);
+                $clientArray['photo'] = asset('storage/' . $client->photo);
+                $clientArray['photo_path'] = $client->photo;
+            }
+            return $clientArray;
+        });
+        
         return response()->json($clients);
     }
 
@@ -57,6 +89,17 @@ class ClientManagementController extends Controller
         $clients = Client::where('status', 'suspended')
             ->orderBy('created_at', 'desc')
             ->get();
+        
+        $clients = $clients->map(function ($client) {
+            $clientArray = $client->toArray();
+            if ($client->photo) {
+                $clientArray['image'] = asset('storage/' . $client->photo);
+                $clientArray['photo'] = asset('storage/' . $client->photo);
+                $clientArray['photo_path'] = $client->photo;
+            }
+            return $clientArray;
+        });
+        
         return response()->json($clients);
     }
 
@@ -66,6 +109,17 @@ class ClientManagementController extends Controller
         $clients = Client::where('status', 'rejected')
             ->orderBy('created_at', 'desc')
             ->get();
+        
+        $clients = $clients->map(function ($client) {
+            $clientArray = $client->toArray();
+            if ($client->photo) {
+                $clientArray['image'] = asset('storage/' . $client->photo);
+                $clientArray['photo'] = asset('storage/' . $client->photo);
+                $clientArray['photo_path'] = $client->photo;
+            }
+            return $clientArray;
+        });
+        
         return response()->json($clients);
     }
 
@@ -73,7 +127,58 @@ class ClientManagementController extends Controller
     public function show($id)
     {
         $client = Client::findOrFail($id);
-        return response()->json($client);
+        $clientArray = $client->toArray();
+        
+        if ($client->photo) {
+            $clientArray['image'] = asset('storage/' . $client->photo);
+            $clientArray['photo'] = asset('storage/' . $client->photo);
+            $clientArray['photo_path'] = $client->photo;
+        }
+        
+        return response()->json($clientArray);
+    }
+
+    // Store (create) new client
+    public function store(Request $request)
+    {
+        $validationRules = [
+            'name'    => 'required|string|max:255',
+            'email'   => 'required|email|unique:clients,email',
+            'phone'   => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:500',
+            'password' => 'required|string|min:6',
+        ];
+
+        // Only validate photo if it's provided
+        if ($request->hasFile('photo')) {
+            $validationRules['photo'] = 'required|image|mimes:jpeg,png,jpg,gif|max:2048';
+        }
+
+        $data = $request->validate($validationRules);
+
+        $data['password'] = Hash::make($data['password']);
+        $data['status'] = 'active'; // Auto-approve clients created by employees
+        $data['email_verified_at'] = now(); // تحقق تلقائي من البريد
+
+        // Handle photo upload
+        if ($request->hasFile('photo')) {
+            $data['photo'] = $request->file('photo')->store('clients/photos', 'public');
+        }
+
+        $client = Client::create($data);
+        $client->refresh();
+        $clientArray = $client->toArray();
+        
+        if ($client->photo) {
+            $clientArray['image'] = asset('storage/' . $client->photo);
+            $clientArray['photo'] = asset('storage/' . $client->photo);
+            $clientArray['photo_path'] = $client->photo;
+        }
+
+        return response()->json([
+            'message' => 'Client created successfully',
+            'client'  => $clientArray,
+        ], 201);
     }
 
     // Update client information
@@ -81,13 +186,19 @@ class ClientManagementController extends Controller
     {
         $client = Client::findOrFail($id);
 
-        $data = $request->validate([
+        $validationRules = [
             'name'    => 'sometimes|required|string|max:255',
             'email'   => 'sometimes|required|email|unique:clients,email,' . $client->id,
             'phone'   => 'sometimes|nullable|string|max:20',
             'address' => 'sometimes|nullable|string|max:500',
-            'photo'   => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+        ];
+
+        // Only validate photo if it's provided
+        if ($request->hasFile('photo')) {
+            $validationRules['photo'] = 'required|image|mimes:jpeg,png,jpg,gif|max:2048';
+        }
+
+        $data = $request->validate($validationRules);
 
         // Handle photo upload
         if ($request->hasFile('photo')) {
@@ -99,10 +210,18 @@ class ClientManagementController extends Controller
         }
 
         $client->update($data);
+        $client->refresh();
+        $clientArray = $client->toArray();
+        
+        if ($client->photo) {
+            $clientArray['image'] = asset('storage/' . $client->photo);
+            $clientArray['photo'] = asset('storage/' . $client->photo);
+            $clientArray['photo_path'] = $client->photo;
+        }
 
         return response()->json([
             'message' => 'Client profile updated successfully',
-            'client'  => $client,
+            'client'  => $clientArray,
         ]);
     }
 
@@ -111,8 +230,9 @@ class ClientManagementController extends Controller
     {
         $client = Client::findOrFail($id);
 
-        if (! $client->hasVerifiedEmail()) {
-            return response()->json(['message' => 'Client must verify email before approval.'], 400);
+        // تأكد من تعيين email_verified_at إذا لم يكن موجوداً
+        if (! $client->email_verified_at) {
+            $client->email_verified_at = now();
         }
 
         $client->status = 'active';
@@ -171,6 +291,17 @@ class ClientManagementController extends Controller
         $clients = Client::onlyTrashed()
             ->orderBy('deleted_at', 'desc')
             ->get();
+        
+        $clients = $clients->map(function ($client) {
+            $clientArray = $client->toArray();
+            if ($client->photo) {
+                $clientArray['image'] = asset('storage/' . $client->photo);
+                $clientArray['photo'] = asset('storage/' . $client->photo);
+                $clientArray['photo_path'] = $client->photo;
+            }
+            return $clientArray;
+        });
+        
         return response()->json($clients);
     }
 

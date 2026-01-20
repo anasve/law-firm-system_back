@@ -21,11 +21,18 @@ class AdminProfileRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:admins,email,' . auth()->id(),
             'password' => 'nullable|string|min:6|confirmed', // password + password_confirmation
         ];
+
+        // Only validate photo if it's provided
+        if ($this->hasFile('photo')) {
+            $rules['photo'] = 'required|image|mimes:jpeg,png,jpg,gif|max:2048';
+        }
+
+        return $rules;
     }
     
     public function messages(): array

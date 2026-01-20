@@ -9,6 +9,7 @@ use App\Http\Controllers\API\Admin\AdminProfileController;
 use App\Http\Controllers\API\Admin\SpecializationController;
 use App\Http\Controllers\API\Admin\AdminConsultationController;
 use App\Http\Controllers\API\Admin\JobApplicationController;
+use App\Http\Controllers\API\Admin\NotificationController;
 
 Route::post('/login', [AdminAuthController::class, 'login']);
 
@@ -57,10 +58,18 @@ Route::middleware('auth:admin')->group(function () {
 
     // Job Applications routes
     Route::get('job-applications', [JobApplicationController::class, 'index']);
-    Route::get('job-applications/pending-count', [JobApplicationController::class, 'pendingCount']);
     Route::get('job-applications/{id}', [JobApplicationController::class, 'show']);
     Route::post('job-applications/{id}/approve', [JobApplicationController::class, 'approve']);
     Route::post('job-applications/{id}/reject', [JobApplicationController::class, 'reject']);
     Route::delete('job-applications/{id}', [JobApplicationController::class, 'destroy']);
+
+    // Notifications routes
+    Route::get('notifications', [NotificationController::class, 'index']);
+    Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::put('notifications/{id}/read', [NotificationController::class, 'markAsRead']); // Support both POST and PUT
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::put('notifications/read-all', [NotificationController::class, 'markAllAsRead']); // Support both POST and PUT
+    Route::delete('notifications/{id}', [NotificationController::class, 'destroy']);
 
 });

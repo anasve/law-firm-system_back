@@ -40,7 +40,6 @@ Route::middleware('auth:lawyer')->group(function () {
 
     // Notifications routes
     Route::get('notifications', [NotificationController::class, 'index']);
-    Route::get('notifications/unread', [NotificationController::class, 'unread']);
     Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::put('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::put('notifications/read-all', [NotificationController::class, 'markAllAsRead']);

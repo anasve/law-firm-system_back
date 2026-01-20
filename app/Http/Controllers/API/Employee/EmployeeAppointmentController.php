@@ -342,5 +342,43 @@ class EmployeeAppointmentController extends Controller
         ]);
     }
 
+    // إنشاء موعد من التقويم
+    public function calendarCreate(Request $request)
+    {
+        $request->validate([
+            'lawyer_id' => 'required|exists:lawyers,id',
+            'client_id' => 'required|exists:clients,id',
+            'datetime' => 'required|date',
+            'subject' => 'nullable|string|max:255',
+            'description' => 'nullable|string|max:1000',
+            'availability_id' => 'nullable|exists:lawyer_availability,id',
+        ]);
+
+        $appointment = Appointment::create([
+            'lawyer_id' => $request->lawyer_id,
+            'client_id' => $request->client_id,
+            'datetime' => $request->datetime,
+            'subject' => $request->subject,
+            'description' => $request->description,
+            'availability_id' => $request->availability_id,
+            'status' => 'pending',
+            'type' => 'in_office',
+        ]);
+
+        // تحديث حالة availability إذا تم تعيينه
+        if ($request->availability_id) {
+            $availability = LawyerAvailability::find($request->availability_id);
+            if ($availability) {
+                $availability->status = 'booked';
+                $availability->save();
+            }
+        }
+
+        return response()->json([
+            'message' => 'تم إنشاء الموعد بنجاح',
+            'appointment' => $appointment->load(['client', 'lawyer', 'consultation', 'availability']),
+        ], 201);
+    }
+
 }
 

@@ -12,7 +12,15 @@ class EmployeeProfileController extends Controller
 {
       public function show()
     {
-        return response()->json(auth('employee')->user());
+        $employee = auth('employee')->user();
+        $employeeArray = $employee->toArray();
+        
+        if ($employee->photo) {
+            $employeeArray['photo'] = asset('storage/' . $employee->photo);
+            $employeeArray['photo_path'] = $employee->photo;
+        }
+        
+        return response()->json($employeeArray);
     }
 
     public function update(EmployeeProfileRequest $request)
@@ -34,7 +42,14 @@ class EmployeeProfileController extends Controller
         }
 
         $employee->update($data);
+        $employee->refresh();
+        $employeeArray = $employee->toArray();
+        
+        if ($employee->photo) {
+            $employeeArray['photo'] = asset('storage/' . $employee->photo);
+            $employeeArray['photo_path'] = $employee->photo;
+        }
 
-        return response()->json($employee);
+        return response()->json($employeeArray);
     }
 }

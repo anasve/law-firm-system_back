@@ -34,6 +34,15 @@ class EmployeeController extends Controller
             ], 404);
         }
 
+        $employees = $employees->map(function ($employee) {
+            $employeeArray = $employee->toArray();
+            if ($employee->photo) {
+                $employeeArray['photo'] = asset('storage/' . $employee->photo);
+                $employeeArray['photo_path'] = $employee->photo;
+            }
+            return $employeeArray;
+        });
+
         return response()->json($employees);
     }
 
@@ -41,8 +50,14 @@ class EmployeeController extends Controller
     public function show($id)
     {
         $employee = Employee::findOrFail($id);
+        $employeeArray = $employee->toArray();
+        
+        if ($employee->photo) {
+            $employeeArray['photo'] = asset('storage/' . $employee->photo);
+            $employeeArray['photo_path'] = $employee->photo;
+        }
 
-        return response()->json($employee);
+        return response()->json($employeeArray);
     }
 
     // Store new employee
@@ -60,10 +75,16 @@ class EmployeeController extends Controller
         }
 
         $employee = Employee::create($data);
+        $employeeArray = $employee->toArray();
+        
+        if ($employee->photo) {
+            $employeeArray['photo'] = asset('storage/' . $employee->photo);
+            $employeeArray['photo_path'] = $employee->photo;
+        }
 
         return response()->json([
             'message'  => 'Employee created successfully',
-            'employee' => $employee,
+            'employee' => $employeeArray,
         ], 201);
     }
 
@@ -87,10 +108,17 @@ class EmployeeController extends Controller
         }
 
         $employee->update($data);
+        $employee->refresh();
+        $employeeArray = $employee->toArray();
+        
+        if ($employee->photo) {
+            $employeeArray['photo'] = asset('storage/' . $employee->photo);
+            $employeeArray['photo_path'] = $employee->photo;
+        }
 
         return response()->json([
             'message'  => 'Employee updated successfully',
-            'employee' => $employee,
+            'employee' => $employeeArray,
         ]);
     }
 
@@ -107,6 +135,15 @@ class EmployeeController extends Controller
     public function archived()
     {
         $employees = Employee::onlyTrashed()->get();
+        
+        $employees = $employees->map(function ($employee) {
+            $employeeArray = $employee->toArray();
+            if ($employee->photo) {
+                $employeeArray['photo'] = asset('storage/' . $employee->photo);
+                $employeeArray['photo_path'] = $employee->photo;
+            }
+            return $employeeArray;
+        });
 
         return response()->json($employees);
     }

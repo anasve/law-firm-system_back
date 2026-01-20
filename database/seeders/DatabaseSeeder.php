@@ -21,7 +21,8 @@ class DatabaseSeeder extends Seeder
         // ]);
         $this->call(AdminSeeder::class);
         $this->call(SpecializationSeeder::class);
-         $this->call([LawSeeder::class,]);
+        $this->call(LawSeeder::class);
+        $this->call(FixedPriceSeeder::class);
 
     }
 }

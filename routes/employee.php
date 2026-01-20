@@ -28,7 +28,8 @@ Route::middleware('auth:employee')->group(function () {
     Route::get('clients/approved', [ClientManagementController::class, 'approved']);
     Route::get('clients/suspended', [ClientManagementController::class, 'suspended']);
 
-    Route::apiResource('clients', ClientManagementController::class)->except(['create', 'edit', 'store']);
+    Route::apiResource('clients', ClientManagementController::class)->except(['create', 'edit']);
+    Route::post('clients', [ClientManagementController::class, 'store']);
 
     Route::post('clients/{id}/activate', [ClientManagementController::class, 'activate']);
     Route::post('clients/{id}/reject', [ClientManagementController::class, 'reject']);
@@ -52,6 +53,7 @@ Route::middleware('auth:employee')->group(function () {
     Route::get('appointments/calendar/month', [EmployeeAppointmentController::class, 'calendarMonth']); // تقويم شهري
     Route::get('appointments/calendar/week', [EmployeeAppointmentController::class, 'calendarWeek']); // تقويم أسبوعي
     Route::get('appointments/calendar/day', [EmployeeAppointmentController::class, 'calendarDay']); // تقويم يومي
+    Route::post('appointments/calendar/create', [EmployeeAppointmentController::class, 'calendarCreate']); // إنشاء موعد من التقويم
     Route::get('appointments/{id}', [EmployeeAppointmentController::class, 'show']);
     Route::post('appointments/{id}/accept', [EmployeeAppointmentController::class, 'accept']); // قبول موعد
     Route::post('appointments/{id}/reject', [EmployeeAppointmentController::class, 'reject']); // رفض موعد
@@ -77,7 +79,6 @@ Route::middleware('auth:employee')->group(function () {
 
     // Notifications routes
     Route::get('notifications', [NotificationController::class, 'index']);
-    Route::get('notifications/unread', [NotificationController::class, 'unread']);
     Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::put('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::put('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
