@@ -30,19 +30,19 @@ class NewMessageNotification extends Notification
             : $this->message->consultation->lawyer->name;
 
         return (new MailMessage)
-            ->subject('رسالة جديدة في الاستشارة')
-            ->greeting('مرحباً ' . $notifiable->name)
-            ->line('لديك رسالة جديدة من ' . $senderName)
-            ->line('الرسالة: ' . substr($this->message->message, 0, 100) . '...')
-            ->action('عرض الرسالة', url('/consultations/' . $this->message->consultation_id))
-            ->line('شكراً لك');
+            ->subject('New Message in Consultation')
+            ->greeting('Hello ' . $notifiable->name)
+            ->line('You have a new message from ' . $senderName)
+            ->line('Message: ' . substr($this->message->message, 0, 100) . '...')
+            ->action('View Message', url('/consultations/' . $this->message->consultation_id))
+            ->line('Thank you.');
     }
 
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'رسالة جديدة',
-            'message' => 'رسالة جديدة في الاستشارة',
+            'title' => 'New Message',
+            'message' => 'New message in consultation',
             'consultation_id' => $this->message->consultation_id,
             'message_id' => $this->message->id,
         ];

@@ -26,19 +26,19 @@ class NewConsultationNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('استشارة قانونية جديدة')
-            ->greeting('مرحباً ' . $notifiable->name)
-            ->line('لديك استشارة قانونية جديدة من العميل ' . $this->consultation->client->name)
-            ->line('الموضوع: ' . $this->consultation->subject)
-            ->action('عرض الاستشارة', url('/lawyer/consultations/' . $this->consultation->id))
-            ->line('شكراً لك');
+            ->subject('New Legal Consultation')
+            ->greeting('Hello ' . $notifiable->name)
+            ->line('You have a new legal consultation from client ' . $this->consultation->client->name)
+            ->line('Subject: ' . $this->consultation->subject)
+            ->action('View Consultation', url('/lawyer/consultations/' . $this->consultation->id))
+            ->line('Thank you.');
     }
 
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'استشارة قانونية جديدة',
-            'message' => 'استشارة جديدة من ' . $this->consultation->client->name,
+            'title' => 'New Legal Consultation',
+            'message' => 'New consultation from ' . $this->consultation->client->name,
             'consultation_id' => $this->consultation->id,
             'subject' => $this->consultation->subject,
         ];

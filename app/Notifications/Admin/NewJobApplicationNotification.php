@@ -26,22 +26,22 @@ class NewJobApplicationNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('طلب توظيف جديد - ' . ($this->application->type === 'lawyer' ? 'محامي' : 'موظف'))
-            ->greeting('مرحباً ' . $notifiable->name)
-            ->line('تم استلام طلب توظيف جديد:')
-            ->line('الاسم: ' . $this->application->name)
-            ->line('البريد الإلكتروني: ' . $this->application->email)
-            ->line('النوع: ' . ($this->application->type === 'lawyer' ? 'محامي' : 'موظف'))
-            ->line('رقم الهاتف: ' . ($this->application->phone ?? 'غير متوفر'))
-            ->action('عرض الطلب', url('/admin/job-applications/' . $this->application->id))
-            ->line('شكراً لك');
+            ->subject('New Job Application - ' . ($this->application->type === 'lawyer' ? 'Lawyer' : 'Employee'))
+            ->greeting('Hello ' . $notifiable->name)
+            ->line('A new job application has been received:')
+            ->line('Name: ' . $this->application->name)
+            ->line('Email: ' . $this->application->email)
+            ->line('Type: ' . ($this->application->type === 'lawyer' ? 'Lawyer' : 'Employee'))
+            ->line('Phone: ' . ($this->application->phone ?? 'N/A'))
+            ->action('View Application', url('/admin/job-applications/' . $this->application->id))
+            ->line('Thank you.');
     }
 
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'طلب توظيف جديد',
-            'message' => 'طلب توظيف جديد من ' . $this->application->name . ' (' . ($this->application->type === 'lawyer' ? 'محامي' : 'موظف') . ')',
+            'title' => 'New Job Application',
+            'message' => 'New job application from ' . $this->application->name . ' (' . ($this->application->type === 'lawyer' ? 'Lawyer' : 'Employee') . ')',
             'application_id' => $this->application->id,
             'application_type' => $this->application->type,
             'applicant_name' => $this->application->name,

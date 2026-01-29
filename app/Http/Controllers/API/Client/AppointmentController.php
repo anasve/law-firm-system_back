@@ -26,7 +26,7 @@ class AppointmentController extends Controller
         // التحقق من أن التاريخ ليس في الماضي
         if ($dateCarbon->isPast() && !$dateCarbon->isToday()) {
             return response()->json([
-                'message' => 'لا يمكن حجز موعد في الماضي',
+                'message' => 'Cannot book an appointment in the past.',
             ], 400);
         }
 
@@ -119,19 +119,19 @@ class AppointmentController extends Controller
             'description' => 'required|string|min:10',
             'notes' => 'nullable|string|max:1000',
         ], [
-            'availability_id.required_without' => 'يجب إرسال إما availability_id أو datetime',
-            'datetime.required_without' => 'يجب إرسال إما availability_id أو datetime',
-            'preferred_time.required_with' => 'preferred_time مطلوب عند إرسال datetime',
-            'preferred_date.required_with' => 'preferred_date مطلوب عند إرسال datetime',
+            'availability_id.required_without' => 'You must send either availability_id or datetime.',
+            'datetime.required_without' => 'You must send either availability_id or datetime.',
+            'preferred_time.required_with' => 'preferred_time is required when sending datetime.',
+            'preferred_date.required_with' => 'preferred_date is required when sending datetime.',
         ]);
 
         // التحقق من عدم إرسال كليهما
         if ($request->has('availability_id') && $request->has('datetime')) {
             return response()->json([
-                'message' => 'يجب إرسال إما availability_id أو datetime، وليس كلاهما',
+                'message' => 'You must send either availability_id or datetime, not both.',
                 'errors' => [
-                    'availability_id' => ['يجب إرسال إما availability_id أو datetime'],
-                    'datetime' => ['يجب إرسال إما availability_id أو datetime'],
+                    'availability_id' => ['You must send either availability_id or datetime.'],
+                    'datetime' => ['You must send either availability_id or datetime.'],
                 ],
             ], 422);
         }
@@ -157,9 +157,9 @@ class AppointmentController extends Controller
                 }
             } catch (\Exception $e) {
                 return response()->json([
-                    'message' => 'صيغة التاريخ والوقت غير صحيحة. استخدم YYYY-MM-DDTHH:mm:ss أو YYYY-MM-DD HH:mm:ss',
+                    'message' => 'Invalid datetime format. Use YYYY-MM-DDTHH:mm:ss or YYYY-MM-DD HH:mm:ss.',
                     'errors' => [
-                        'datetime' => ['صيغة التاريخ والوقت غير صحيحة: ' . $e->getMessage()],
+                        'datetime' => ['Invalid datetime format: ' . $e->getMessage()],
                     ],
                 ], 422);
             }
@@ -167,7 +167,7 @@ class AppointmentController extends Controller
             // التحقق من أن الموعد ليس في الماضي
             if ($datetime->isPast()) {
                 return response()->json([
-                    'message' => 'لا يمكن حجز موعد في الماضي',
+                    'message' => 'Cannot book an appointment in the past.',
                 ], 400);
             }
 
@@ -192,7 +192,7 @@ class AppointmentController extends Controller
             $appointmentData['is_custom_time_request'] = true;
 
             return response()->json([
-                'message' => 'تم إرسال طلب الموعد بنجاح. سيتم تأكيد الوقت من قبل المحامي إذا كان متاحاً.',
+                'message' => 'Appointment request sent successfully. The lawyer will confirm the time if available.',
                 'appointment' => $appointmentData,
             ], 201);
 
@@ -211,7 +211,7 @@ class AppointmentController extends Controller
 
             if ($isBooked || $availability->status === 'booked') {
                 return response()->json([
-                    'message' => 'هذا الموعد محجوز بالفعل. يرجى اختيار وقت آخر.',
+                    'message' => 'This slot is already booked. Please choose another time.',
                 ], 400);
             }
 
@@ -222,7 +222,7 @@ class AppointmentController extends Controller
             
             if ($datetime->isPast()) {
                 return response()->json([
-                    'message' => 'لا يمكن حجز موعد في الماضي',
+                    'message' => 'Cannot book an appointment in the past.',
                 ], 400);
             }
 
@@ -233,7 +233,7 @@ class AppointmentController extends Controller
 
             if ($existingAppointment) {
                 return response()->json([
-                    'message' => 'هذا الموعد محجوز بالفعل',
+                    'message' => 'This slot is already booked.',
                 ], 400);
             }
 
@@ -262,7 +262,7 @@ class AppointmentController extends Controller
             $appointmentData['is_custom_time_request'] = false;
 
             return response()->json([
-                'message' => 'تم حجز الموعد بنجاح. سيتم تأكيده من قبل الموظف قريباً.',
+                'message' => 'Appointment booked successfully. It will be confirmed by the employee shortly.',
                 'appointment' => $appointmentData,
             ], 201);
         }
@@ -300,7 +300,7 @@ class AppointmentController extends Controller
 
         if ($isBooked || $availability->status === 'booked') {
             return response()->json([
-                'message' => 'هذا الموعد محجوز بالفعل. يرجى اختيار وقت آخر.',
+                'message' => 'This slot is already booked. Please choose another time.',
             ], 400);
         }
 
@@ -311,7 +311,7 @@ class AppointmentController extends Controller
 
         if ($existingAppointment) {
             return response()->json([
-                'message' => 'هذا الموعد محجوز بالفعل. يرجى اختيار وقت آخر.',
+                'message' => 'This slot is already booked. Please choose another time.',
             ], 400);
         }
 
@@ -322,7 +322,7 @@ class AppointmentController extends Controller
         
         if ($datetime->isPast()) {
             return response()->json([
-                'message' => 'لا يمكن حجز موعد في الماضي',
+                'message' => 'Cannot book an appointment in the past.',
             ], 400);
         }
 
@@ -345,7 +345,7 @@ class AppointmentController extends Controller
         $consultation->lawyer->notify(new NewAppointmentNotification($appointment));
 
         return response()->json([
-            'message' => 'تم حجز الموعد بنجاح. سيتم تأكيده من قبل الموظف قريباً.',
+            'message' => 'Appointment booked successfully. It will be confirmed by the employee shortly.',
             'appointment' => $appointment->load(['lawyer', 'consultation']),
         ], 201);
     }
@@ -386,7 +386,7 @@ class AppointmentController extends Controller
         // التحقق من أن الـ ID رقم وليس نص (مثل "direct")
         if (!is_numeric($id)) {
             return response()->json([
-                'message' => 'معرف الموعد غير صحيح',
+                'message' => 'Invalid appointment ID.',
             ], 404);
         }
 
@@ -406,7 +406,7 @@ class AppointmentController extends Controller
         // التحقق من أن الـ ID رقم
         if (!is_numeric($id)) {
             return response()->json([
-                'message' => 'معرف الموعد غير صحيح',
+                'message' => 'Invalid appointment ID.',
             ], 404);
         }
 
@@ -423,14 +423,14 @@ class AppointmentController extends Controller
         
         if ($hoursUntilAppointment < 1 && $hoursUntilAppointment > 0) {
             return response()->json([
-                'message' => 'لا يمكن إلغاء الموعد قبل ساعة واحدة من الموعد المحدد. الموعد بعد ' . round($hoursUntilAppointment * 60) . ' دقيقة.',
+                'message' => 'Cannot cancel appointment less than one hour before the scheduled time. Appointment is in ' . round($hoursUntilAppointment * 60) . ' minutes.',
             ], 400);
         }
 
         // التحقق من أن الموعد ليس في الماضي
         if ($appointment->datetime->isPast()) {
             return response()->json([
-                'message' => 'لا يمكن إلغاء موعد منتهي',
+                'message' => 'Cannot cancel a past appointment.',
             ], 400);
         }
 
@@ -454,7 +454,7 @@ class AppointmentController extends Controller
         }
 
         return response()->json([
-            'message' => 'تم إلغاء الموعد بنجاح',
+            'message' => 'Appointment cancelled successfully.',
             'appointment' => $appointment->load(['lawyer', 'consultation']),
         ]);
     }
@@ -465,7 +465,7 @@ class AppointmentController extends Controller
         // التحقق من أن الـ ID رقم
         if (!is_numeric($id)) {
             return response()->json([
-                'message' => 'معرف الموعد غير صحيح',
+                'message' => 'Invalid appointment ID.',
             ], 404);
         }
 
@@ -481,7 +481,7 @@ class AppointmentController extends Controller
         // لا يمكن إعادة الجدولة قبل الموعد بساعة
         if ($appointment->datetime->diffInHours(now()) < 1) {
             return response()->json([
-                'message' => 'لا يمكن إعادة جدولة الموعد قبل ساعة واحدة من الموعد المحدد',
+                'message' => 'Cannot reschedule less than one hour before the scheduled appointment.',
             ], 400);
         }
 
@@ -499,7 +499,7 @@ class AppointmentController extends Controller
 
         if ($existingAppointment) {
             return response()->json([
-                'message' => 'هذا الموعد محجوز بالفعل',
+                'message' => 'This slot is already booked.',
             ], 400);
         }
 
@@ -530,7 +530,7 @@ class AppointmentController extends Controller
         // TODO: إشعار للمحامي والموظف
 
         return response()->json([
-            'message' => 'تم إعادة جدولة الموعد بنجاح',
+            'message' => 'Appointment rescheduled successfully.',
             'appointment' => $appointment->load(['lawyer', 'consultation', 'availability']),
         ]);
     }

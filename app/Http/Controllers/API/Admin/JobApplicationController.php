@@ -88,7 +88,7 @@ class JobApplicationController extends Controller
 
         if ($application->status !== 'pending') {
             return response()->json([
-                'message' => 'لا يمكن الموافقة على طلب تم معالجته مسبقاً',
+                'message' => 'Cannot approve an application that has already been processed.',
             ], 400);
         }
 
@@ -97,13 +97,13 @@ class JobApplicationController extends Controller
             if ($application->type === 'lawyer') {
                 if (Lawyer::where('email', $application->email)->exists()) {
                     return response()->json([
-                        'message' => 'البريد الإلكتروني مستخدم بالفعل في جدول المحامين',
+                        'message' => 'This email is already in use by a lawyer.',
                     ], 422);
                 }
             } else {
                 if (Employee::where('email', $application->email)->exists()) {
                     return response()->json([
-                        'message' => 'البريد الإلكتروني مستخدم بالفعل في جدول الموظفين',
+                        'message' => 'This email is already in use by an employee.',
                     ], 422);
                 }
             }
@@ -178,7 +178,7 @@ class JobApplicationController extends Controller
             }
 
             return response()->json([
-                'message' => 'تم الموافقة على الطلب وإنشاء الحساب بنجاح',
+                'message' => 'Application approved and account created successfully.',
                 'data' => [
                     'application_id' => $application->id,
                     'user_id' => $user->id,
@@ -194,7 +194,7 @@ class JobApplicationController extends Controller
                 'application_id' => $id,
             ]);
             return response()->json([
-                'message' => 'حدث خطأ أثناء معالجة الطلب',
+                'message' => 'An error occurred while processing the application.',
                 'error' => $e->getMessage(),
                 'trace' => config('app.debug') ? $e->getTraceAsString() : null,
             ], 500);
@@ -210,7 +210,7 @@ class JobApplicationController extends Controller
 
         if ($application->status !== 'pending') {
             return response()->json([
-                'message' => 'لا يمكن رفض طلب تم معالجته مسبقاً',
+                'message' => 'Cannot reject an application that has already been processed.',
             ], 400);
         }
 
@@ -221,7 +221,7 @@ class JobApplicationController extends Controller
         $application->save();
 
         return response()->json([
-            'message' => 'تم رفض الطلب بنجاح',
+            'message' => 'Application rejected successfully.',
             'data' => [
                 'id' => $application->id,
                 'status' => $application->status,
@@ -248,7 +248,7 @@ class JobApplicationController extends Controller
         $application->delete();
 
         return response()->json([
-            'message' => 'تم حذف الطلب بنجاح',
+            'message' => 'Application deleted successfully.',
         ], 200);
     }
 }

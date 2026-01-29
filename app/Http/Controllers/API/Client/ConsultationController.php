@@ -105,7 +105,7 @@ class ConsultationController extends Controller
         }
 
         return response()->json([
-            'message' => 'تم إنشاء الاستشارة بنجاح',
+            'message' => 'Consultation created successfully.',
             'consultation' => $consultation->load(['lawyer', 'specialization', 'attachments']),
         ], 201);
     }
@@ -139,7 +139,7 @@ class ConsultationController extends Controller
         }
 
         return response()->json([
-            'message' => 'تم إرسال الرسالة بنجاح',
+            'message' => 'Message sent successfully.',
             'message_data' => $message,
         ], 201);
     }
@@ -168,7 +168,7 @@ class ConsultationController extends Controller
         $consultation->status = 'cancelled';
         $consultation->save();
 
-        return response()->json(['message' => 'تم إلغاء الاستشارة بنجاح']);
+        return response()->json(['message' => 'Consultation cancelled successfully.']);
     }
 
     // إكمال الاستشارة
@@ -181,7 +181,7 @@ class ConsultationController extends Controller
         // التحقق من وجود محامي للاستشارة
         if (!$consultation->lawyer_id) {
             return response()->json([
-                'message' => 'لا يمكن إكمال الاستشارة بدون محامي محدد',
+                'message' => 'Cannot complete consultation without an assigned lawyer.',
             ], 400);
         }
 
@@ -189,7 +189,7 @@ class ConsultationController extends Controller
         $consultation->save();
 
         return response()->json([
-            'message' => 'تم إكمال الاستشارة بنجاح',
+            'message' => 'Consultation completed successfully.',
             'consultation' => $consultation->load(['lawyer', 'specialization']),
         ]);
     }
@@ -203,7 +203,7 @@ class ConsultationController extends Controller
 
         // التحقق من عدم وجود تقييم سابق
         if ($consultation->review) {
-            return response()->json(['message' => 'تم التقييم مسبقاً'], 400);
+            return response()->json(['message' => 'Already reviewed.'], 400);
         }
 
         $review = ConsultationReview::create([
@@ -214,7 +214,7 @@ class ConsultationController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'تم إنشاء التقييم بنجاح',
+            'message' => 'Review created successfully.',
             'review' => $review,
         ], 201);
     }

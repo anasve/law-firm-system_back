@@ -30,7 +30,8 @@ class LawyerController extends Controller
             ], 404);
         }
 
-        $lawyers = $lawyers->map(function ($lawyer) {
+        $baseUrl = rtrim(request()->getSchemeAndHttpHost(), '/');
+        $lawyers = $lawyers->map(function ($lawyer) use ($baseUrl) {
             return [
                 'id'              => $lawyer->id,
                 'name'            => $lawyer->name,
@@ -38,9 +39,9 @@ class LawyerController extends Controller
                 'age'             => $lawyer->age,
                 'phone'           => $lawyer->phone,
                 'address'         => $lawyer->address,
-                'photo'           => $lawyer->photo ? asset('storage/' . $lawyer->photo) : null,
+                'photo'           => $lawyer->photo ? $baseUrl . '/storage/' . $lawyer->photo : null,
                 'photo_path'      => $lawyer->photo,
-                'certificate'     => $lawyer->certificate ? asset('storage/' . $lawyer->certificate) : null,
+                'certificate'     => $lawyer->certificate ? $baseUrl . '/storage/' . $lawyer->certificate : null,
                 'certificate_path' => $lawyer->certificate,
                 'specializations' => $lawyer->specializations->pluck('name'),
                 'created_at'      => $lawyer->created_at,
@@ -54,6 +55,7 @@ class LawyerController extends Controller
     {
         $lawyer = Lawyer::with('specializations')->findOrFail($id);
 
+        $baseUrl = rtrim(request()->getSchemeAndHttpHost(), '/');
         return response()->json([
             'id'              => $lawyer->id,
             'name'            => $lawyer->name,
@@ -61,9 +63,9 @@ class LawyerController extends Controller
             'age'             => $lawyer->age,
             'phone'           => $lawyer->phone,
             'address'         => $lawyer->address,
-            'photo'           => $lawyer->photo ? asset('storage/' . $lawyer->photo) : null,
+            'photo'           => $lawyer->photo ? $baseUrl . '/storage/' . $lawyer->photo : null,
             'photo_path'      => $lawyer->photo,
-            'certificate'     => $lawyer->certificate ? asset('storage/' . $lawyer->certificate) : null,
+            'certificate'     => $lawyer->certificate ? $baseUrl . '/storage/' . $lawyer->certificate : null,
             'certificate_path' => $lawyer->certificate,
             'specializations' => $lawyer->specializations->pluck('name'),
             'created_at'      => $lawyer->created_at,
@@ -92,6 +94,7 @@ class LawyerController extends Controller
 
         $lawyer->load('specializations');
 
+        $baseUrl = rtrim(request()->getSchemeAndHttpHost(), '/');
         return response()->json([
             'message' => 'Lawyer created successfully',
             'lawyer'  => [
@@ -101,9 +104,9 @@ class LawyerController extends Controller
                 'age'             => $lawyer->age,
                 'phone'           => $lawyer->phone,
                 'address'         => $lawyer->address,
-                'photo'           => $lawyer->photo ? asset('storage/' . $lawyer->photo) : null,
+                'photo'           => $lawyer->photo ? $baseUrl . '/storage/' . $lawyer->photo : null,
                 'photo_path'      => $lawyer->photo,
-                'certificate'     => $lawyer->certificate ? asset('storage/' . $lawyer->certificate) : null,
+                'certificate'     => $lawyer->certificate ? $baseUrl . '/storage/' . $lawyer->certificate : null,
                 'certificate_path' => $lawyer->certificate,
                 'specializations' => $lawyer->specializations->pluck('name'),
                 'created_at'      => $lawyer->created_at,
@@ -144,6 +147,7 @@ class LawyerController extends Controller
 
         $lawyer->load('specializations');
 
+        $baseUrl = rtrim(request()->getSchemeAndHttpHost(), '/');
         return response()->json([
             'message' => 'Lawyer updated successfully',
             'lawyer'  => [
@@ -153,9 +157,9 @@ class LawyerController extends Controller
                 'age'             => $lawyer->age,
                 'phone'           => $lawyer->phone,
                 'address'         => $lawyer->address,
-                'photo'           => $lawyer->photo ? asset('storage/' . $lawyer->photo) : null,
+                'photo'           => $lawyer->photo ? $baseUrl . '/storage/' . $lawyer->photo : null,
                 'photo_path'      => $lawyer->photo,
-                'certificate'     => $lawyer->certificate ? asset('storage/' . $lawyer->certificate) : null,
+                'certificate'     => $lawyer->certificate ? $baseUrl . '/storage/' . $lawyer->certificate : null,
                 'certificate_path' => $lawyer->certificate,
                 'specializations' => $lawyer->specializations->pluck('name'),
             ],
@@ -172,7 +176,8 @@ class LawyerController extends Controller
 
     public function archived()
     {
-        $archived = Lawyer::onlyTrashed()->with('specializations')->get()->map(function ($lawyer) {
+        $baseUrl = rtrim(request()->getSchemeAndHttpHost(), '/');
+        $archived = Lawyer::onlyTrashed()->with('specializations')->get()->map(function ($lawyer) use ($baseUrl) {
             return [
                 'id'              => $lawyer->id,
                 'name'            => $lawyer->name,
@@ -180,9 +185,9 @@ class LawyerController extends Controller
                 'age'             => $lawyer->age,
                 'phone'           => $lawyer->phone,
                 'address'         => $lawyer->address,
-                'photo'           => $lawyer->photo ? asset('storage/' . $lawyer->photo) : null,
+                'photo'           => $lawyer->photo ? $baseUrl . '/storage/' . $lawyer->photo : null,
                 'photo_path'      => $lawyer->photo,
-                'certificate'     => $lawyer->certificate ? asset('storage/' . $lawyer->certificate) : null,
+                'certificate'     => $lawyer->certificate ? $baseUrl . '/storage/' . $lawyer->certificate : null,
                 'certificate_path' => $lawyer->certificate,
                 'specializations' => $lawyer->specializations->pluck('name'),
                 'deleted_at'      => $lawyer->deleted_at,

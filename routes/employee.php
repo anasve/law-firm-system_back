@@ -41,7 +41,7 @@ Route::middleware('auth:employee')->group(function () {
     // Availability management routes
     Route::apiResource('availability', EmployeeAvailabilityController::class);
     Route::post('availability/batch', [EmployeeAvailabilityController::class, 'storeBatch']);
-    Route::post('availability/create-schedule', [EmployeeAvailabilityController::class, 'createSchedule']); // إنشاء جدول عمل بسيط
+    Route::post('availability/create-schedule', [EmployeeAvailabilityController::class, 'createSchedule']); // Create simple work schedule
 
     // Availability templates routes
     Route::apiResource('availability-templates', EmployeeAvailabilityTemplateController::class);
@@ -50,15 +50,15 @@ Route::middleware('auth:employee')->group(function () {
     // Appointments management routes
     Route::get('appointments', [EmployeeAppointmentController::class, 'index']);
     Route::get('appointments/custom-time-requests', [EmployeeAppointmentController::class, 'customTimeRequests']); // المواعيد بوقت مخصص
-    Route::get('appointments/calendar/month', [EmployeeAppointmentController::class, 'calendarMonth']); // تقويم شهري
-    Route::get('appointments/calendar/week', [EmployeeAppointmentController::class, 'calendarWeek']); // تقويم أسبوعي
-    Route::get('appointments/calendar/day', [EmployeeAppointmentController::class, 'calendarDay']); // تقويم يومي
-    Route::post('appointments/calendar/create', [EmployeeAppointmentController::class, 'calendarCreate']); // إنشاء موعد من التقويم
+    Route::get('appointments/calendar/month', [EmployeeAppointmentController::class, 'calendarMonth']); // Monthly calendar
+    Route::get('appointments/calendar/week', [EmployeeAppointmentController::class, 'calendarWeek']); // Weekly calendar
+    Route::get('appointments/calendar/day', [EmployeeAppointmentController::class, 'calendarDay']); // Daily calendar
+    Route::post('appointments/calendar/create', [EmployeeAppointmentController::class, 'calendarCreate']); // Create appointment from calendar
     Route::get('appointments/{id}', [EmployeeAppointmentController::class, 'show']);
-    Route::post('appointments/{id}/accept', [EmployeeAppointmentController::class, 'accept']); // قبول موعد
-    Route::post('appointments/{id}/reject', [EmployeeAppointmentController::class, 'reject']); // رفض موعد
+    Route::post('appointments/{id}/accept', [EmployeeAppointmentController::class, 'accept']); // Accept appointment
+    Route::post('appointments/{id}/reject', [EmployeeAppointmentController::class, 'reject']); // Reject appointment
 
-    // Consultations management routes (إدارة الاستشارات)
+    // Consultations management routes
     Route::get('consultations', [EmployeeConsultationController::class, 'index']);
     Route::get('consultations/pending', [EmployeeConsultationController::class, 'pending']);
     Route::get('consultations/statistics', [EmployeeConsultationController::class, 'statistics']);
@@ -66,7 +66,7 @@ Route::middleware('auth:employee')->group(function () {
     Route::post('consultations/{id}/assign', [EmployeeConsultationController::class, 'assign']);
     Route::post('consultations/{id}/auto-assign', [EmployeeConsultationController::class, 'autoAssign']);
 
-    // Fixed Prices management routes (إدارة الأسعار الثابتة)
+    // Fixed Prices management routes
     Route::get('fixed-prices', [EmployeeFixedPriceController::class, 'index']);
     Route::get('fixed-prices/active', [EmployeeFixedPriceController::class, 'active']);
     Route::get('fixed-prices/archived', [EmployeeFixedPriceController::class, 'archived']);

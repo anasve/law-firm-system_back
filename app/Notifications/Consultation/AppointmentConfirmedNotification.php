@@ -20,7 +20,7 @@ class AppointmentConfirmedNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database']; // تعطيل الإيميل مؤقتاً لتجنب حد Mailtrap
+        return ['database']; // Email disabled temporarily to avoid Mailtrap limit
     }
 
     public function toMail(object $notifiable): MailMessage
@@ -40,8 +40,8 @@ class AppointmentConfirmedNotification extends Notification
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'تم تأكيد موعدك',
-            'message' => 'تم تأكيد موعدك مع ' . $this->appointment->lawyer->name,
+            'title' => 'Appointment Confirmed',
+            'message' => 'Your appointment with ' . $this->appointment->lawyer->name . ' has been confirmed.',
             'appointment_id' => $this->appointment->id,
             'consultation_id' => $this->appointment->consultation_id,
             'datetime' => $this->appointment->datetime->format('Y-m-d H:i'),

@@ -22,30 +22,30 @@ class AppointmentReminderNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database']; // تعطيل الإيميل مؤقتاً لتجنب حد Mailtrap
+        return ['database']; // Email disabled temporarily to avoid Mailtrap limit
     }
 
     public function toMail(object $notifiable): MailMessage
     {
         $datetime = $this->appointment->datetime->format('Y-m-d H:i');
-        $timeUntil = $this->reminderType === '24h' ? '24 ساعة' : 'ساعة واحدة';
+        $timeUntil = $this->reminderType === '24h' ? '24 hours' : '1 hour';
 
         return (new MailMessage)
-            ->subject('تذكير بالموعد - ' . $timeUntil)
-            ->greeting('مرحباً ' . $notifiable->name)
-            ->line('هذا تذكير بموعدك المحدد بعد ' . $timeUntil)
-            ->line('التاريخ والوقت: ' . $datetime)
-            ->line('النوع: في المكتب')
-            ->line('نتمنى لك استشارة ناجحة');
+            ->subject('Appointment Reminder - ' . $timeUntil)
+            ->greeting('Hello ' . $notifiable->name)
+            ->line('This is a reminder for your appointment in ' . $timeUntil)
+            ->line('Date & Time: ' . $datetime)
+            ->line('Type: In Office')
+            ->line('We wish you a successful consultation.');
     }
 
     public function toArray(object $notifiable): array
     {
-        $timeUntil = $this->reminderType === '24h' ? '24 ساعة' : 'ساعة واحدة';
+        $timeUntil = $this->reminderType === '24h' ? '24 hours' : '1 hour';
 
         return [
-            'title' => 'تذكير بالموعد',
-            'message' => 'موعدك بعد ' . $timeUntil . ' - ' . $this->appointment->datetime->format('Y-m-d H:i'),
+            'title' => 'Appointment Reminder',
+            'message' => 'Your appointment in ' . $timeUntil . ' - ' . $this->appointment->datetime->format('Y-m-d H:i'),
             'appointment_id' => $this->appointment->id,
             'consultation_id' => $this->appointment->consultation_id,
             'datetime' => $this->appointment->datetime->format('Y-m-d H:i'),

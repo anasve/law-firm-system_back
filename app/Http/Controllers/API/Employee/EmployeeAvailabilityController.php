@@ -38,7 +38,7 @@ class EmployeeAvailabilityController extends Controller
 
         if ($conflict) {
             return response()->json([
-                'message' => 'يوجد تعارض مع وقت متاح آخر',
+                'message' => 'This time conflicts with another availability slot.',
             ], 400);
         }
 
@@ -54,7 +54,7 @@ class EmployeeAvailabilityController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'تم إضافة الوقت المتاح بنجاح',
+            'message' => 'Availability slot added successfully.',
             'availability' => $availability->load('lawyer'),
         ], 201);
     }
@@ -98,7 +98,7 @@ class EmployeeAvailabilityController extends Controller
         // لا يمكن تعديل وقت محجوز
         if ($availability->status === 'booked') {
             return response()->json([
-                'message' => 'لا يمكن تعديل وقت محجوز',
+                'message' => 'Cannot update a booked slot.',
             ], 400);
         }
 
@@ -117,7 +117,7 @@ class EmployeeAvailabilityController extends Controller
         ]));
 
         return response()->json([
-            'message' => 'تم تحديث الوقت المتاح بنجاح',
+            'message' => 'Availability slot updated successfully.',
             'availability' => $availability->load('lawyer'),
         ]);
     }
@@ -130,14 +130,14 @@ class EmployeeAvailabilityController extends Controller
         // لا يمكن حذف وقت محجوز
         if ($availability->status === 'booked') {
             return response()->json([
-                'message' => 'لا يمكن حذف وقت محجوز. يجب إلغاء الموعد أولاً',
+                'message' => 'Cannot delete a booked slot. Cancel the appointment first.',
             ], 400);
         }
 
         $availability->delete();
 
         return response()->json([
-            'message' => 'تم حذف الوقت المتاح بنجاح',
+            'message' => 'Availability slot deleted successfully.',
         ]);
     }
 
@@ -176,7 +176,7 @@ class EmployeeAvailabilityController extends Controller
         }
 
         return response()->json([
-            'message' => 'تم إضافة ' . count($created) . ' وقت متاح',
+            'message' => count($created) . ' availability slot(s) added.',
             'created' => $created,
             'errors' => $errors,
         ], 201);
@@ -266,7 +266,7 @@ class EmployeeAvailabilityController extends Controller
         }
 
         return response()->json([
-            'message' => 'تم إنشاء الجدول بنجاح',
+            'message' => 'Schedule created successfully.',
             'created_slots' => $created,
             'skipped_slots' => $skipped,
             'errors' => $errors,

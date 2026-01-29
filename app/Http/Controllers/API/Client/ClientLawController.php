@@ -32,7 +32,7 @@ class ClientLawController extends Controller
         if ($laws->isEmpty()) {
             return response()->json([
                 'data' => [],
-                'message' => 'لا توجد قوانين منشورة متاحة حالياً.',
+                'message' => 'No published laws are currently available.',
             ], 200);
         }
 
@@ -50,7 +50,7 @@ class ClientLawController extends Controller
 
         if (!$law) {
             return response()->json([
-                'message' => 'القانون المطلوب غير موجود أو غير منشور.',
+                'message' => 'The requested law does not exist or is not published.',
             ], 404);
         }
 

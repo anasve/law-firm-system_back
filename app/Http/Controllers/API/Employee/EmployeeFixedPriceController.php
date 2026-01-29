@@ -94,7 +94,7 @@ class EmployeeFixedPriceController extends Controller
         $price = FixedPrice::create($data);
 
         return response()->json([
-            'message' => 'تم إنشاء السعر الثابت بنجاح',
+            'message' => 'Fixed price created successfully.',
             'data' => $price,
         ], 201);
     }
@@ -119,7 +119,7 @@ class EmployeeFixedPriceController extends Controller
         $price->update($data);
 
         return response()->json([
-            'message' => 'تم تحديث السعر الثابت بنجاح',
+            'message' => 'Fixed price updated successfully.',
             'data' => $price,
         ]);
     }
@@ -133,7 +133,7 @@ class EmployeeFixedPriceController extends Controller
         $price->delete();
 
         return response()->json([
-            'message' => 'تم أرشفة السعر الثابت بنجاح',
+            'message' => 'Fixed price archived successfully.',
         ]);
     }
 
@@ -146,7 +146,7 @@ class EmployeeFixedPriceController extends Controller
         $price->restore();
 
         return response()->json([
-            'message' => 'تم استعادة السعر الثابت بنجاح',
+            'message' => 'Fixed price restored successfully.',
             'data' => $price,
         ]);
     }
@@ -160,7 +160,7 @@ class EmployeeFixedPriceController extends Controller
         $price->forceDelete();
 
         return response()->json([
-            'message' => 'تم حذف السعر الثابت نهائياً',
+            'message' => 'Fixed price permanently deleted.',
         ]);
     }
 }

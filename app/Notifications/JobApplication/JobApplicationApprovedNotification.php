@@ -35,15 +35,15 @@ class JobApplicationApprovedNotification extends Notification
             : url('/employee/login');
 
         return (new MailMessage)
-            ->subject('تم قبول طلب التوظيف - مرحباً بك!')
-            ->greeting('مرحباً ' . $this->name)
-            ->line('تم قبول طلب التوظيف بنجاح!')
-            ->line('يمكنك الآن تسجيل الدخول باستخدام:')
-            ->line('البريد الإلكتروني: ' . $this->email)
-            ->line('كلمة المرور المؤقتة: ' . $this->password)
-            ->line('⚠️ يرجى تغيير كلمة المرور بعد تسجيل الدخول لأول مرة')
-            ->action('تسجيل الدخول', $loginUrl)
-            ->line('شكراً لانضمامك إلينا!');
+            ->subject('Job Application Approved - Welcome!')
+            ->greeting('Hello ' . $this->name)
+            ->line('Your job application has been approved!')
+            ->line('You can now sign in using:')
+            ->line('Email: ' . $this->email)
+            ->line('Temporary password: ' . $this->password)
+            ->line('⚠️ Please change your password after first login.')
+            ->action('Sign In', $loginUrl)
+            ->line('Thank you for joining us!');
     }
 }
 

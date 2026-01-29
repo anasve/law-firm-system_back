@@ -27,10 +27,10 @@ Route::middleware('auth:lawyer')->group(function () {
     Route::get('consultations/{consultationId}/messages', [LawyerConsultationController::class, 'getMessages']);
     Route::put('consultations/{consultationId}/messages/{messageId}/read', [LawyerConsultationController::class, 'markMessageAsRead']);
 
-    // Appointments routes (قراءة فقط)
+    // Appointments routes (read-only)
     Route::get('appointments', [LawyerAppointmentController::class, 'index']);
     Route::get('appointments/upcoming', [LawyerAppointmentController::class, 'upcoming']);
-    Route::get('appointments/calendar/month', [LawyerAppointmentController::class, 'calendarMonth']); // تقويم شهري
+    Route::get('appointments/calendar/month', [LawyerAppointmentController::class, 'calendarMonth']); // Monthly calendar
     Route::get('appointments/{id}', [LawyerAppointmentController::class, 'show']);
 
     // Laws routes

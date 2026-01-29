@@ -53,22 +53,22 @@ class StoreJobApplicationRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'type.required' => 'نوع الطلب مطلوب (lawyer أو employee)',
-            'type.in' => 'نوع الطلب يجب أن يكون lawyer أو employee',
-            'name.required' => 'الاسم مطلوب',
-            'email.email' => 'البريد الإلكتروني غير صحيح',
-            'email.unique' => 'هذا البريد الإلكتروني مستخدم بالفعل',
-            'age.required' => 'العمر مطلوب',
-            'age.min' => 'يجب أن يكون العمر 18 سنة على الأقل',
-            'age.max' => 'العمر غير صحيح',
-            'specialization_id.required' => 'التخصص مطلوب للمحامي',
-            'specialization_id.exists' => 'التخصص المحدد غير موجود',
-            'certificate.required' => 'الشهادة مطلوبة للمحامي',
-            'certificate.file' => 'الشهادة يجب أن تكون ملف',
-            'certificate.mimes' => 'الشهادة يجب أن تكون بصيغة PDF, DOC, أو DOCX',
-            'certificate.max' => 'حجم الشهادة يجب أن يكون أقل من 10 ميجابايت',
-            'photo.image' => 'الصورة يجب أن تكون صورة',
-            'photo.max' => 'حجم الصورة يجب أن يكون أقل من 10 ميجابايت',
+            'type.required' => 'Application type is required (lawyer or employee).',
+            'type.in' => 'Application type must be lawyer or employee.',
+            'name.required' => 'Name is required.',
+            'email.email' => 'Invalid email address.',
+            'email.unique' => 'This email is already in use.',
+            'age.required' => 'Age is required.',
+            'age.min' => 'Age must be at least 18 years.',
+            'age.max' => 'Invalid age.',
+            'specialization_id.required' => 'Specialization is required for lawyer applications.',
+            'specialization_id.exists' => 'The selected specialization does not exist.',
+            'certificate.required' => 'Certificate is required for lawyer applications.',
+            'certificate.file' => 'Certificate must be a file.',
+            'certificate.mimes' => 'Certificate must be in PDF, DOC, or DOCX format.',
+            'certificate.max' => 'Certificate size must be less than 10 MB.',
+            'photo.image' => 'Photo must be an image.',
+            'photo.max' => 'Photo size must be less than 10 MB.',
         ];
     }
 }

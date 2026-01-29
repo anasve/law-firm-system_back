@@ -33,8 +33,8 @@ class StoreLawRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'title.required'    => 'العنوان مطلوب.',
-            'category.required' => 'التصنيف مطلوب.',
+            'title.required'    => 'Title is required.',
+            'category.required' => 'Category is required.',
         ];
     }
 }

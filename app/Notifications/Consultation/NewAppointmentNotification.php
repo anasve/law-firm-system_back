@@ -29,20 +29,20 @@ class NewAppointmentNotification extends Notification
         $datetime = $this->appointment->datetime->format('Y-m-d H:i');
 
         return (new MailMessage)
-            ->subject('موعد جديد')
-            ->greeting('مرحباً ' . $notifiable->name)
-            ->line('لديك موعد جديد مع العميل ' . $clientName)
-            ->line('التاريخ والوقت: ' . $datetime)
-            ->line('النوع: في المكتب')
-            ->action('عرض الموعد', url('/appointments/' . $this->appointment->id))
-            ->line('شكراً لك');
+            ->subject('New Appointment')
+            ->greeting('Hello ' . $notifiable->name)
+            ->line('You have a new appointment with client ' . $clientName)
+            ->line('Date & Time: ' . $datetime)
+            ->line('Type: In Office')
+            ->action('View Appointment', url('/appointments/' . $this->appointment->id))
+            ->line('Thank you.');
     }
 
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'موعد جديد',
-            'message' => 'موعد جديد مع ' . $this->appointment->client->name,
+            'title' => 'New Appointment',
+            'message' => 'New appointment with ' . $this->appointment->client->name,
             'appointment_id' => $this->appointment->id,
             'consultation_id' => $this->appointment->consultation_id,
             'datetime' => $this->appointment->datetime->format('Y-m-d H:i'),

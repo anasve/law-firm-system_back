@@ -40,7 +40,7 @@ class NotificationController extends Controller
         $notification->markAsRead();
 
         return response()->json([
-            'message' => 'تم تحديد الإشعار كمقروء',
+            'message' => 'Notification marked as read.',
             'notification' => $notification,
         ]);
     }
@@ -51,7 +51,7 @@ class NotificationController extends Controller
         Auth::user()->unreadNotifications->markAsRead();
 
         return response()->json([
-            'message' => 'تم تحديد جميع الإشعارات كمقروءة',
+            'message' => 'All notifications marked as read.',
         ]);
     }
 
@@ -62,7 +62,7 @@ class NotificationController extends Controller
         $notification->delete();
 
         return response()->json([
-            'message' => 'تم حذف الإشعار',
+            'message' => 'Notification deleted.',
         ]);
     }
 }

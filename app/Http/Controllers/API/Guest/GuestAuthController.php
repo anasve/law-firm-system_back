@@ -74,7 +74,7 @@ class GuestAuthController extends Controller
                 'email'   => $client->email,
                 'phone'   => $client->phone,
                 'address' => $client->address,
-                'photo'   => $client->photo,
+                'photo'   => $client->photo ? asset('storage/' . $client->photo) : null,
             ],
         ]);
     }

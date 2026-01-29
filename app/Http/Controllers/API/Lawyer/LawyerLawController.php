@@ -45,7 +45,7 @@ class LawyerLawController extends Controller
 
         if (!$law) {
             return response()->json([
-                'message' => 'القانون المطلوب غير موجود أو غير منشور.',
+                'message' => 'The requested law does not exist or is not published.',
             ], 404);
         }
 

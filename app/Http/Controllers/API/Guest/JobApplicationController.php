@@ -50,7 +50,7 @@ class JobApplicationController extends Controller
             }
 
             return response()->json([
-                'message' => 'تم تقديم طلب التوظيف بنجاح',
+                'message' => 'Job application submitted successfully.',
                 'data' => [
                     'id' => $jobApplication->id,
                     'type' => $jobApplication->type,
@@ -67,7 +67,7 @@ class JobApplicationController extends Controller
             ]);
             
             return response()->json([
-                'message' => 'حدث خطأ أثناء تقديم الطلب',
+                'message' => 'An error occurred while submitting the application.',
                 'error' => config('app.debug') ? $e->getMessage() : 'Internal server error',
             ], 500);
         }

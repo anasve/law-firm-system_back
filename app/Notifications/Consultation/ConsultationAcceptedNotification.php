@@ -26,18 +26,18 @@ class ConsultationAcceptedNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('تم قبول استشارتك القانونية')
-            ->greeting('مرحباً ' . $notifiable->name)
-            ->line('تم قبول استشارتك القانونية من قبل المحامي ' . $this->consultation->lawyer->name)
-            ->action('عرض الاستشارة', url('/consultations/' . $this->consultation->id))
-            ->line('شكراً لاستخدامك خدماتنا');
+            ->subject('Your Legal Consultation Has Been Accepted')
+            ->greeting('Hello ' . $notifiable->name)
+            ->line('Your legal consultation has been accepted by lawyer ' . $this->consultation->lawyer->name)
+            ->action('View Consultation', url('/consultations/' . $this->consultation->id))
+            ->line('Thank you for using our services.');
     }
 
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'تم قبول الاستشارة',
-            'message' => 'تم قبول استشارتك من قبل المحامي ' . $this->consultation->lawyer->name,
+            'title' => 'Consultation Accepted',
+            'message' => 'Your consultation was accepted by lawyer ' . $this->consultation->lawyer->name,
             'consultation_id' => $this->consultation->id,
         ];
     }

@@ -97,7 +97,7 @@ class EmployeeAppointmentController extends Controller
         // التحقق من أن الموعد في حالة pending
         if ($appointment->status !== 'pending') {
             return response()->json([
-                'message' => 'يمكن قبول المواعيد في حالة pending فقط',
+                'message' => 'Only pending appointments can be accepted.',
             ], 400);
         }
 
@@ -131,7 +131,7 @@ class EmployeeAppointmentController extends Controller
         $appointment->lawyer->notify(new \App\Notifications\Consultation\AppointmentConfirmedNotification($appointment));
 
         return response()->json([
-            'message' => 'تم قبول الموعد بنجاح',
+            'message' => 'Appointment accepted successfully.',
             'appointment' => $appointment->load(['client', 'lawyer', 'consultation', 'availability']),
         ]);
     }
@@ -148,7 +148,7 @@ class EmployeeAppointmentController extends Controller
         // التحقق من أن الموعد في حالة pending
         if ($appointment->status !== 'pending') {
             return response()->json([
-                'message' => 'يمكن رفض المواعيد في حالة pending فقط',
+                'message' => 'Only pending appointments can be rejected.',
             ], 400);
         }
 
@@ -171,7 +171,7 @@ class EmployeeAppointmentController extends Controller
         $appointment->client->notify(new \App\Notifications\Consultation\AppointmentCancelledNotification($appointment));
 
         return response()->json([
-            'message' => 'تم رفض الموعد بنجاح',
+            'message' => 'Appointment rejected successfully.',
             'appointment' => $appointment->load(['client', 'lawyer', 'consultation']),
         ]);
     }
@@ -375,7 +375,7 @@ class EmployeeAppointmentController extends Controller
         }
 
         return response()->json([
-            'message' => 'تم إنشاء الموعد بنجاح',
+            'message' => 'Appointment created successfully.',
             'appointment' => $appointment->load(['client', 'lawyer', 'consultation', 'availability']),
         ], 201);
     }

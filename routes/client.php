@@ -41,12 +41,12 @@ Route::middleware('auth:client')->group(function () {
     // Appointments routes
     Route::get('lawyers/{lawyerId}/available-slots', [AppointmentController::class, 'getAvailableSlots']);
     Route::get('appointments', [AppointmentController::class, 'myAppointments']);
-    Route::get('appointments/calendar/month', [AppointmentController::class, 'calendarMonth']); // تقويم شهري
-    Route::post('appointments/direct', [AppointmentController::class, 'bookDirectAppointment']); // حجز موعد مباشر بدون استشارة (يجب أن يكون قبل appointments/{id})
+    Route::get('appointments/calendar/month', [AppointmentController::class, 'calendarMonth']); // Monthly calendar
+    Route::post('appointments/direct', [AppointmentController::class, 'bookDirectAppointment']); // Direct appointment booking without consultation (must be before appointments/{id})
     Route::post('consultations/{consultationId}/appointments', [AppointmentController::class, 'bookAppointment']);
     Route::get('appointments/{id}', [AppointmentController::class, 'show'])->where('id', '[0-9]+');
     Route::post('appointments/{id}/cancel', [AppointmentController::class, 'cancel'])->where('id', '[0-9]+');
-    Route::post('appointments/{id}/reschedule', [AppointmentController::class, 'reschedule'])->where('id', '[0-9]+'); // إعادة جدولة
+    Route::post('appointments/{id}/reschedule', [AppointmentController::class, 'reschedule'])->where('id', '[0-9]+'); // Reschedule
 
     // Laws routes
     Route::get('laws', [ClientLawController::class, 'index']);

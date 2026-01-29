@@ -36,18 +36,18 @@ class StoreConsultationRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'lawyer_id.exists' => 'المحامي المحدد غير موجود.',
-            'specialization_id.exists' => 'التخصص المحدد غير موجود.',
-            'subject.required' => 'عنوان الاستشارة مطلوب.',
-            'description.required' => 'وصف المشكلة مطلوب.',
-            'description.min' => 'وصف المشكلة يجب أن يكون على الأقل 10 أحرف.',
-            'priority.required' => 'درجة الأولوية مطلوبة.',
-            'preferred_channel.required' => 'طريقة الاستشارة المفضلة مطلوبة.',
-            'preferred_channel.in' => 'طريقة الاستشارة يجب أن تكون إما شات أو رابط اجتماع.',
-            'meeting_link.required_if' => 'رابط الاجتماع مطلوب عند اختيار طريقة رابط الاجتماع.',
-            'meeting_link.url' => 'رابط الاجتماع يجب أن يكون رابطاً صحيحاً.',
-            'attachments.*.file' => 'يجب أن يكون المرفق ملفاً صحيحاً.',
-            'attachments.*.max' => 'حجم الملف يجب أن يكون أقل من 10 ميجابايت.',
+            'lawyer_id.exists' => 'The selected lawyer does not exist.',
+            'specialization_id.exists' => 'The selected specialization does not exist.',
+            'subject.required' => 'Consultation subject is required.',
+            'description.required' => 'Problem description is required.',
+            'description.min' => 'The problem description must be at least 10 characters.',
+            'priority.required' => 'Priority level is required.',
+            'preferred_channel.required' => 'Preferred consultation method is required.',
+            'preferred_channel.in' => 'Consultation method must be either chat or meeting_link.',
+            'meeting_link.required_if' => 'Meeting link is required when choosing meeting_link.',
+            'meeting_link.url' => 'Meeting link must be a valid URL.',
+            'attachments.*.file' => 'Attachment must be a valid file.',
+            'attachments.*.max' => 'File size must be less than 10 MB.',
         ];
     }
 }

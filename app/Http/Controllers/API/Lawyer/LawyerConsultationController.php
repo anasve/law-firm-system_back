@@ -133,7 +133,7 @@ class LawyerConsultationController extends Controller
             if ($consultation->specialization_id && !empty($specializationIds)) {
                 if (!in_array($consultation->specialization_id, $specializationIds)) {
                     return response()->json([
-                        'message' => 'أنت لست متخصصاً في هذا التخصص. لا يمكنك قبول هذه الاستشارة.',
+                        'message' => 'You are not specialized in this area. You cannot accept this consultation.',
                     ], 403);
                 }
             }
@@ -148,7 +148,7 @@ class LawyerConsultationController extends Controller
         $consultation->client->notify(new ConsultationAcceptedNotification($consultation));
 
         return response()->json([
-            'message' => 'تم قبول الاستشارة بنجاح',
+            'message' => 'Consultation accepted successfully.',
             'consultation' => $consultation->load(['client', 'specialization']),
         ]);
     }
@@ -175,7 +175,7 @@ class LawyerConsultationController extends Controller
             if ($consultation->specialization_id && !empty($specializationIds)) {
                 if (!in_array($consultation->specialization_id, $specializationIds)) {
                     return response()->json([
-                        'message' => 'أنت لست متخصصاً في هذا التخصص. لا يمكنك رفض هذه الاستشارة.',
+                        'message' => 'You are not specialized in this area. You cannot reject this consultation.',
                     ], 403);
                 }
             }
@@ -191,7 +191,7 @@ class LawyerConsultationController extends Controller
         $consultation->client->notify(new ConsultationRejectedNotification($consultation));
 
         return response()->json([
-            'message' => 'تم رفض الاستشارة',
+            'message' => 'Consultation rejected.',
             'consultation' => $consultation->load(['client', 'specialization']),
         ]);
     }
@@ -223,7 +223,7 @@ class LawyerConsultationController extends Controller
         $consultation->client->notify(new NewMessageNotification($message));
 
         return response()->json([
-            'message' => 'تم إرسال الرسالة بنجاح',
+            'message' => 'Message sent successfully.',
             'message_data' => $message,
         ], 201);
     }
@@ -256,7 +256,7 @@ class LawyerConsultationController extends Controller
         $consultation->save();
 
         return response()->json([
-            'message' => 'تم إنهاء الاستشارة بنجاح',
+            'message' => 'Consultation completed successfully.',
             'consultation' => $consultation,
         ]);
     }
@@ -276,7 +276,7 @@ class LawyerConsultationController extends Controller
         $message->read_at = now();
         $message->save();
 
-        return response()->json(['message' => 'تم تحديث حالة الرسالة']);
+        return response()->json(['message' => 'Message marked as read.']);
     }
 }
 

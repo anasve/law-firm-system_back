@@ -26,20 +26,20 @@ class AppointmentCancelledNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('تم إلغاء موعدك')
-            ->greeting('مرحباً ' . $notifiable->name)
-            ->line('نأسف لإبلاغك بأن المحامي ' . $this->appointment->lawyer->name . ' ألغى موعدك المحدد في ' . $this->appointment->datetime->format('Y-m-d H:i'))
-            ->line('السبب: ' . ($this->appointment->cancellation_reason ?? 'حالة طارئة'))
-            ->line('يمكنك حجز موعد جديد من خلال الاستشارة')
-            ->action('عرض الاستشارة', url('/consultations/' . $this->appointment->consultation_id))
-            ->line('نعتذر عن الإزعاج');
+            ->subject('Your Appointment Has Been Cancelled')
+            ->greeting('Hello ' . $notifiable->name)
+            ->line('We are sorry to inform you that lawyer ' . $this->appointment->lawyer->name . ' has cancelled your appointment scheduled for ' . $this->appointment->datetime->format('Y-m-d H:i'))
+            ->line('Reason: ' . ($this->appointment->cancellation_reason ?? 'Emergency'))
+            ->line('You can book a new appointment through the consultation.')
+            ->action('View Consultation', url('/consultations/' . $this->appointment->consultation_id))
+            ->line('We apologize for any inconvenience.');
     }
 
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'تم إلغاء موعدك',
-            'message' => 'تم إلغاء موعدك من قبل المحامي ' . $this->appointment->lawyer->name,
+            'title' => 'Appointment Cancelled',
+            'message' => 'Your appointment was cancelled by lawyer ' . $this->appointment->lawyer->name,
             'appointment_id' => $this->appointment->id,
             'consultation_id' => $this->appointment->consultation_id,
             'cancellation_reason' => $this->appointment->cancellation_reason,

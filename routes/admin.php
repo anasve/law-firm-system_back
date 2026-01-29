@@ -51,7 +51,7 @@ Route::middleware('auth:admin')->group(function () {
     Route::put('specializations/{id}/restore', [SpecializationController::class, 'restore']); 
     Route::delete('specializations/{id}/force', [SpecializationController::class, 'forceDelete']);
 
-    // Consultations routes (قراءة فقط - الإدارة للموظف)
+    // Consultations routes (read-only - management by employee)
     Route::get('consultations', [AdminConsultationController::class, 'index']);
     Route::get('consultations/statistics', [AdminConsultationController::class, 'statistics']);
     Route::get('consultations/{id}', [AdminConsultationController::class, 'show']);

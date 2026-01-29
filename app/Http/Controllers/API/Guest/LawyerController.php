@@ -36,12 +36,14 @@ class LawyerController extends Controller
             ], 404);
         }
 
-        $lawyers->getCollection()->transform(function ($lawyer) {
+        $baseUrl = rtrim(request()->getSchemeAndHttpHost(), '/');
+        $lawyers->getCollection()->transform(function ($lawyer) use ($baseUrl) {
             return [
                 'id'              => $lawyer->id,
                 'name'            => $lawyer->name,
                 'age'             => $lawyer->age,
-                'photo'           => $lawyer->photo ? asset('storage/' . $lawyer->photo) : null,
+                'photo'           => $lawyer->photo ? $baseUrl . '/api/files/' . $lawyer->photo : null,
+                'photo_path'      => $lawyer->photo,
                 'specializations' => $lawyer->specializations->map(function ($spec) {
                     return [
                         'id'          => $spec->id,
@@ -61,11 +63,13 @@ class LawyerController extends Controller
     {
         $lawyer = Lawyer::with('specializations')->findOrFail($id);
 
+        $baseUrl = rtrim(request()->getSchemeAndHttpHost(), '/');
         return response()->json([
             'id'              => $lawyer->id,
             'name'            => $lawyer->name,
             'age'             => $lawyer->age,
-            'photo'           => $lawyer->photo ? asset('storage/' . $lawyer->photo) : null,
+            'photo'           => $lawyer->photo ? $baseUrl . '/api/files/' . $lawyer->photo : null,
+            'photo_path'      => $lawyer->photo,
             'specializations' => $lawyer->specializations->map(function ($spec) {
                 return [
                     'id'          => $spec->id,
