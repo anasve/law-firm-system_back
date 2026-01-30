@@ -30,6 +30,8 @@ Route::middleware('auth:employee')->group(function () {
 
     Route::apiResource('clients', ClientManagementController::class)->except(['create', 'edit']);
     Route::post('clients', [ClientManagementController::class, 'store']);
+    // POST for client update (FormData/file upload); PUT also works for JSON
+    Route::post('clients/{id}', [ClientManagementController::class, 'update']);
 
     Route::post('clients/{id}/activate', [ClientManagementController::class, 'activate']);
     Route::post('clients/{id}/reject', [ClientManagementController::class, 'reject']);

@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Notifications\Client\ClientApprovedNotification;
 use App\Notifications\Client\ClientRejectedNotification;
 use App\Notifications\Client\ClientSuspendedNotification;
+use App\Http\Requests\Employee\Client\UpdateClientRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
@@ -151,7 +152,7 @@ class ClientManagementController extends Controller
 
         // Only validate photo if it's provided
         if ($request->hasFile('photo')) {
-            $validationRules['photo'] = 'required|image|mimes:jpeg,png,jpg,gif|max:2048';
+            $validationRules['photo'] = 'required|image|mimes:jpeg,png,jpg,gif|max:10240';
         }
 
         $data = $request->validate($validationRules);
@@ -181,38 +182,27 @@ class ClientManagementController extends Controller
         ], 201);
     }
 
-    // Update client information
-    public function update(Request $request, $id)
+    // Update client information (same pattern as Admin EmployeeController)
+    public function update(UpdateClientRequest $request, $id)
     {
         $client = Client::findOrFail($id);
 
-        $validationRules = [
-            'name'    => 'sometimes|required|string|max:255',
-            'email'   => 'sometimes|required|email|unique:clients,email,' . $client->id,
-            'phone'   => 'sometimes|nullable|string|max:20',
-            'address' => 'sometimes|nullable|string|max:500',
-        ];
+        $data = $request->validated();
 
-        // Only validate photo if it's provided
+        // Handle photo upload: store file and set path (never pass UploadedFile to update)
         if ($request->hasFile('photo')) {
-            $validationRules['photo'] = 'required|image|mimes:jpeg,png,jpg,gif|max:2048';
-        }
-
-        $data = $request->validate($validationRules);
-
-        // Handle photo upload
-        if ($request->hasFile('photo')) {
-            // Delete old photo if exists
             if ($client->photo) {
                 Storage::disk('public')->delete($client->photo);
             }
             $data['photo'] = $request->file('photo')->store('clients/photos', 'public');
+        } else {
+            unset($data['photo']);
         }
 
         $client->update($data);
         $client->refresh();
         $clientArray = $client->toArray();
-        
+
         if ($client->photo) {
             $clientArray['image'] = asset('storage/' . $client->photo);
             $clientArray['photo'] = asset('storage/' . $client->photo);

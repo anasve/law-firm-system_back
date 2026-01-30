@@ -27,7 +27,7 @@ class StoreJobApplicationRequest extends FormRequest
             'phone' => 'nullable|string|max:20',
             'age' => 'required|integer|min:18|max:100',
             'address' => 'nullable|string|max:500',
-            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max
+            'photo' => 'required|image|mimes:jpeg,png,jpg,gif|max:10240', // 10MB max - personal photo required
         ];
 
         // Lawyer-specific rules
@@ -67,7 +67,8 @@ class StoreJobApplicationRequest extends FormRequest
             'certificate.file' => 'Certificate must be a file.',
             'certificate.mimes' => 'Certificate must be in PDF, DOC, or DOCX format.',
             'certificate.max' => 'Certificate size must be less than 10 MB.',
-            'photo.image' => 'Photo must be an image.',
+            'photo.required' => 'Personal photo is required.',
+            'photo.image' => 'Personal photo must be an image (JPEG, PNG, GIF).',
             'photo.max' => 'Photo size must be less than 10 MB.',
         ];
     }

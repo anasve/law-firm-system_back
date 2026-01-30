@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Employee\Client;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateClientRequest extends FormRequest
 {
@@ -19,12 +20,22 @@ class UpdateClientRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
-
     public function rules(): array
     {
+        // Support both POST clients/{id} (param 'id') and PUT from apiResource (param 'client')
+        $clientId = $this->route('id') ?? $this->route('client');
+
         return [
-            'name'  => 'sometimes|required|string|max:255',
-            'email' => 'sometimes|required|email|unique:clients,email,' . $this->route('id'),
+            'name'    => 'sometimes|required|string|max:255',
+            'email'   => [
+                'sometimes',
+                'required',
+                'email',
+                Rule::unique('clients', 'email')->ignore($clientId),
+            ],
+            'phone'   => 'sometimes|nullable|string|max:20',
+            'address' => 'sometimes|nullable|string|max:500',
+            'photo'   => 'sometimes|nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
         ];
     }
 
