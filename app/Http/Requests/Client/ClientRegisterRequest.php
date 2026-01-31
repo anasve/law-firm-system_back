@@ -27,7 +27,7 @@ class ClientRegisterRequest extends FormRequest
             'password' => 'required|string|min:6|confirmed',
             'phone'    => 'nullable|string|max:20',
             'address'  => 'nullable|string|max:500',
-            'photo'    => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'photo'    => 'nullable|image|mimes:jpeg,png,jpg,gif|max:10240',
         ];
     }
 
