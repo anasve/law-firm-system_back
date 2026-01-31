@@ -23,6 +23,9 @@ Route::middleware('auth:lawyer')->group(function () {
     Route::post('consultations/{id}/accept', [LawyerConsultationController::class, 'accept']);
     Route::post('consultations/{id}/reject', [LawyerConsultationController::class, 'reject']);
     Route::post('consultations/{id}/complete', [LawyerConsultationController::class, 'complete']);
+    Route::post('consultations/{id}/archive', [LawyerConsultationController::class, 'archive']);
+    Route::post('consultations/{id}/restore', [LawyerConsultationController::class, 'restore']);
+    Route::delete('consultations/{id}', [LawyerConsultationController::class, 'destroy']);
     Route::post('consultations/{consultationId}/messages', [LawyerConsultationController::class, 'sendMessage']);
     Route::get('consultations/{consultationId}/messages', [LawyerConsultationController::class, 'getMessages']);
     Route::put('consultations/{consultationId}/messages/{messageId}/read', [LawyerConsultationController::class, 'markMessageAsRead']);
@@ -42,6 +45,8 @@ Route::middleware('auth:lawyer')->group(function () {
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::get('notifications/unread-count', [NotificationController::class, 'unreadCount']);
     Route::put('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::put('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
+    Route::post('notifications/read-all', [NotificationController::class, 'markAllAsRead']);
     Route::delete('notifications/{id}', [NotificationController::class, 'destroy']);
 });

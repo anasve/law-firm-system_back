@@ -28,9 +28,7 @@ class LawyerConsultationController extends Controller
 
         $query = Consultation::with(['client', 'specialization'])
             ->where(function ($q) use ($lawyerId, $specializationIds) {
-                // الاستشارات المعينة لهذا المحامي
                 $q->where('lawyer_id', $lawyerId)
-                  // أو الاستشارات غير المعينة التي تطابق تخصصاته
                   ->orWhere(function ($subQ) use ($specializationIds) {
                       $subQ->whereNull('lawyer_id')
                            ->where('status', 'pending');
@@ -39,6 +37,10 @@ class LawyerConsultationController extends Controller
                       }
                   });
             });
+
+        if ($request->boolean('archived')) {
+            $query->where('lawyer_id', $lawyerId)->onlyTrashed();
+        }
 
         if ($status = $request->input('status')) {
             $query->where('status', $status);
@@ -86,27 +88,28 @@ class LawyerConsultationController extends Controller
         $lawyer = \App\Models\Lawyer::with('specializations')->find($lawyerId);
         $specializationIds = $lawyer ? $lawyer->specializations->pluck('id')->toArray() : [];
 
-        $consultation = Consultation::with([
-            'client',
-            'specialization',
-            'attachments',
-            'messages' => function ($query) {
-                $query->orderBy('created_at', 'asc');
-            },
-            'appointments',
-            'review'
-        ])->where(function ($q) use ($lawyerId, $specializationIds) {
-            // الاستشارات المعينة لهذا المحامي
-            $q->where('lawyer_id', $lawyerId)
-              // أو الاستشارات غير المعينة التي تطابق تخصصاته
-              ->orWhere(function ($subQ) use ($specializationIds) {
-                  $subQ->whereNull('lawyer_id')
-                       ->where('status', 'pending');
-                  if (!empty($specializationIds)) {
-                      $subQ->whereIn('specialization_id', $specializationIds);
-                  }
-              });
-        })->findOrFail($id);
+        $consultation = Consultation::withTrashed()
+            ->with([
+                'client',
+                'specialization',
+                'attachments',
+                'messages' => function ($query) {
+                    $query->orderBy('created_at', 'asc');
+                },
+                'appointments',
+                'review'
+            ])
+            ->where(function ($q) use ($lawyerId, $specializationIds) {
+                $q->where('lawyer_id', $lawyerId)
+                  ->orWhere(function ($subQ) use ($specializationIds) {
+                      $subQ->whereNull('lawyer_id')
+                           ->where('status', 'pending');
+                      if (!empty($specializationIds)) {
+                          $subQ->whereIn('specialization_id', $specializationIds);
+                      }
+                  });
+            })
+            ->findOrFail($id);
 
         return response()->json($consultation);
     }
@@ -258,6 +261,48 @@ class LawyerConsultationController extends Controller
         return response()->json([
             'message' => 'Consultation completed successfully.',
             'consultation' => $consultation,
+        ]);
+    }
+
+    // أرشفة الاستشارة (حذف مؤقت)
+    public function archive($id)
+    {
+        $consultation = Consultation::where('lawyer_id', Auth::id())
+            ->findOrFail($id);
+
+        $consultation->delete();
+
+        return response()->json([
+            'message' => 'Consultation archived successfully.',
+        ]);
+    }
+
+    // حذف الاستشارة نهائياً (من الأرشيف فقط)
+    public function destroy($id)
+    {
+        $consultation = Consultation::where('lawyer_id', Auth::id())
+            ->onlyTrashed()
+            ->findOrFail($id);
+
+        $consultation->forceDelete();
+
+        return response()->json([
+            'message' => 'Consultation permanently deleted.',
+        ]);
+    }
+
+    // استعادة الاستشارة من الأرشيف
+    public function restore($id)
+    {
+        $consultation = Consultation::where('lawyer_id', Auth::id())
+            ->onlyTrashed()
+            ->findOrFail($id);
+
+        $consultation->restore();
+
+        return response()->json([
+            'message' => 'Consultation restored successfully.',
+            'consultation' => $consultation->load(['client', 'specialization']),
         ]);
     }
 
