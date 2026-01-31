@@ -41,10 +41,12 @@ class NotificationController extends Controller
     {
         $notification = Auth::user()->notifications()->findOrFail($id);
         $notification->markAsRead();
+        $unreadCount = Auth::user()->unreadNotifications()->count();
 
         return response()->json([
             'message' => 'Notification marked as read.',
             'notification' => $notification,
+            'unread_count' => $unreadCount,
         ]);
     }
 
@@ -52,9 +54,11 @@ class NotificationController extends Controller
     public function markAllAsRead()
     {
         Auth::user()->unreadNotifications->markAsRead();
+        $unreadCount = Auth::user()->unreadNotifications()->count();
 
         return response()->json([
             'message' => 'All notifications marked as read.',
+            'unread_count' => $unreadCount,
         ]);
     }
 
